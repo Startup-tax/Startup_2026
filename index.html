@@ -264,7 +264,6 @@
     </style>
 </head>
 <body>
-
     <div id="form-contents" class="form-container">
         <div style="text-align: center; margin-bottom: 20px;">
             <img src="./logo-color-2.jpg" alt="スタートアップ税理士法人 Logo" style="max-width: 180px;">
@@ -548,7 +547,7 @@
                 <fieldset>
                     <div class="fieldset-title">その他収入について</div>
                     <div class="form-group">
-                            <label>令和8年1月1日～12月31日の間に給与収入以外の収入がある場合は「あり」を選択してください。</label>
+                            <label>給与収入以外の収入がある場合は「あり」を選択してください。</label>
                             <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※例：公的年金、不動産収入、原稿料など<br> ※国や自治体から支給される手当や給付金は収入には含みません。</p>
                         <div class="radio-group">
                             <label><input type="radio" name="other_income_existence" value="あり" onchange="toggleSection(this.value === 'あり', 'other-income-group')"> あり</label>
@@ -559,18 +558,22 @@
                         <div class="form-group form-group-small">
                             <label>年金収入金額</label>
                             <div class="yen-input-wrapper"><input type="text" name="user_pension_income" class="currency-input" inputmode="numeric"></div>
+                            <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※所得金額は弊社で算出いたします。</p>
                         </div>
                         <div class="form-group form-group-small">
                             <label>事業収入金額</label>
                             <div class="yen-input-wrapper"><input type="text" name="user_business_income" class="currency-input" inputmode="numeric"></div>
+                            <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※所得金額は弊社で算出いたします。</p>
                         </div>
                         <div class="form-group form-group-small">
                             <label>退職手当等収入金額</label>
                             <div class="yen-input-wrapper"><input type="text" name="user_severance_pay_income" class="currency-input" inputmode="numeric"></div>
+                            <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※所得金額は弊社で算出いたします。</p>
                         </div>
                         <div class="form-group form-group-small">
                             <label>その他収入金額</label>
                             <div class="yen-input-wrapper"><input type="text" name="user_misc_income" class="currency-input" inputmode="numeric"></div>
+                            <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※所得金額は弊社で算出いたします。</p>
                         </div>
                     </div>
                 </fieldset>
@@ -633,6 +636,7 @@
                                 </div>
                             </div>
                             <div class="yen-input-wrapper"><input type="text" name="spouse_salary_income" class="currency-input" inputmode="numeric" required></div>
+                            <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※所得金額は弊社で算出いたします。</p>
                         </div>
                         
                         <div class="form-group">
@@ -653,18 +657,22 @@
                             <div class="form-group form-group-small">
                                 <label>年金収入金額</label>
                                 <div class="yen-input-wrapper"><input type="text" name="spouse_pension_income" class="currency-input" inputmode="numeric"></div>
+                                <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※所得金額は弊社で算出いたします。</p>
                             </div>
                             <div class="form-group form-group-small">
                                 <label>事業収入金額</label>
                                 <div class="yen-input-wrapper"><input type="text" name="spouse_business_income" class="currency-input" inputmode="numeric"></div>
+                                <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※所得金額は弊社で算出いたします。</p>
                             </div>
                             <div class="form-group form-group-small">
                                 <label>退職手当等収入金額</label>
                                 <div class="yen-input-wrapper"><input type="text" name="spouse_severance_pay_income" class="currency-input" inputmode="numeric"></div>
+                                <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※所得金額は弊社で算出いたします。</p>
                             </div>
                             <div class="form-group form-group-small">
                                 <label>その他収入金額</label>
                                 <div class="yen-input-wrapper"><input type="text" name="spouse_misc_income" class="currency-input" inputmode="numeric"></div>
+                                <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※所得金額は弊社で算出いたします。</p>
                             </div>
                         </div>
 
@@ -731,6 +739,7 @@
                                         </div>
                                     </div>
                                     <div class="yen-input-wrapper"><input type="text" name="dependent_${i + 1}_salary_income" class="currency-input" inputmode="numeric" required></div>
+                                    <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※所得金額は弊社で算出いたします。</p>
                                 </div>
                                 
                                 <div class="form-group">
@@ -751,18 +760,22 @@
                                     <div class="form-group form-group-small">
                                         <label>年金収入金額</label>
                                         <div class="yen-input-wrapper"><input type="text" name="dependent_${i + 1}_pension_income" class="currency-input" inputmode="numeric"></div>
+                                        <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※所得金額は弊社で算出いたします。</p>
                                     </div>
                                     <div class="form-group form-group-small">
                                         <label>事業収入金額</label>
                                         <div class="yen-input-wrapper"><input type="text" name="dependent_${i + 1}_business_income" class="currency-input" inputmode="numeric"></div>
+                                        <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※所得金額は弊社で算出いたします。</p>
                                     </div>
                                     <div class="form-group form-group-small">
                                         <label>退職手当等収入金額</label>
                                         <div class="yen-input-wrapper"><input type="text" name="dependent_${i + 1}_severance_pay_income" class="currency-input" inputmode="numeric"></div>
+                                        <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※所得金額は弊社で算出いたします。</p>
                                     </div>
                                     <div class="form-group form-group-small">
                                         <label>その他収入金額</label>
                                         <div class="yen-input-wrapper"><input type="text" name="dependent_${i + 1}_misc_income" class="currency-input" inputmode="numeric"></div>
+                                        <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※所得金額は弊社で算出いたします。</p>
                                     </div>
                                 </div>
 
@@ -906,7 +919,6 @@
                 </fieldset>
             `;
         }
-
         function formatPostalCode(inputName) {
             const inputElement = form.querySelector(`[name="${inputName}"]`);
             if (inputElement && inputElement.value) {
