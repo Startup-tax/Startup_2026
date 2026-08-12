@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>回答状況</title>
+    
+    <link rel="icon" href="./favicon.jpg" type="image/jpeg">
+    <link rel="apple-touch-icon" href="./logo-color-2.jpg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #1e3656;
+            --secondary-color: #5dade2;
+            --light-gray: #f8f9fa;
+            --medium-gray: #dee2e6;
+            --border-radius: 8px;
+        }
+        body {
+            font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6; color: #333; max-width: 800px;
+            margin: 20px auto; padding: 0 20px; background-color: #f4f7f9;
+        }
+        .container {
+            background-color: #fff; padding: 30px; border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border-top: 5px solid var(--secondary-color);
+        }
+        h1 {
+            color: var(--primary-color); text-align: center; font-weight: 700;
+            font-size: 1.8em; margin-top: 0; margin-bottom: 30px;
+        }
+        .overview-panel {
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--medium-gray);
+            padding-bottom: 20px;
+        }
+        .overview-item {
+            font-size: 1.1em;
+            color: var(--primary-color);
+            padding: 5px 0;
+        }
+        .overview-item span {
+            font-weight: 700;
+            font-size: 1.4em;
+            color: #333;
+            margin-left: 10px;
+        }
+        .overview-item .unit {
+            font-size: 0.9em;
+            margin-left: 4px;
+        }
+        .section {
+            padding-top: 15px;
+        }
+        .section-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+        #employee-list-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: auto;
+        }
+        #employee-list-table th, #employee-list-table td {
+            border: 1px solid var(--medium-gray);
+            padding: 12px;
+            text-align: left;
+            vertical-align: middle;
+        }
+        #employee-list-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        .name-cell {
+            width: auto;
+        }
+        .btn-cell {
+            width: 1%;
+            white-space: nowrap;
+            text-align: center;
+        }
+        .btn-confirm {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            display: inline-block;
+            transition: opacity 0.2s;
+        }
+        .btn-confirm:hover {
+            opacity: 0.8;
+        }
+        .hidden { display: none !important; }
+        #loading {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #ffffff;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999;
+        }
+        .loading-logo { max-width: 150px; margin-bottom: 20px; }
+        #loading p { color: var(--primary-color); font-size: 1.2em; margin-top: 20px; font-weight: 700; }
+        .dots-loader { display: flex; justify-content: center; align-items: center; height: 40px; }
+        .dots-loader div { width: 15px; height: 15px; background-color: var(--primary-color); border-radius: 50%; margin: 0 5px; animation: bounce 1.4s infinite ease-in-out both; }
+        .dots-loader .dot1 { animation-delay: -0.32s; } .dots-loader .dot2 { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+        
+        @media (max-width: 600px) {
+            body { padding: 0 10px; }
+            h1 { font-size: 1.6em; }
+            .container { padding: 20px; }
+
+            .overview-item {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .overview-item span {
+                margin-left: 0;
+                font-size: 1.2em;
+            }
+
+            #employee-list-table thead {
+                display: none;
+            }
+            #employee-list-table, #employee-list-table tbody {
+                display: block;
+                width: 100%;
+            }
+            #employee-list-table tr {
+                display: block;
+                border: 1px solid var(--medium-gray);
+                border-radius: var(--border-radius);
+                margin-bottom: 15px;
+                padding: 10px;
+            }
+            #employee-list-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border: none;
+                border-bottom: 1px solid #f0f0f0;
+                padding: 10px 5px;
+            }
+            #employee-list-table td:last-child {
+                border-bottom: none;
+            }
+            #employee-list-table td::before {
+                content: attr(data-label);
+                font-weight: bold;
+                color: var(--primary-color);
+                text-align: left;
+                margin-right: 10px;
+                flex-shrink: 0;
+            }
+            #employee-list-table .name-cell span {
+                word-break: break-all;
+                text-align: right;
+            }
+
+            .btn-cell {
+                justify-content: center;
+                padding-top: 15px;
+            }
+            .btn-cell::before {
+                display: none;
+            }
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            font-size: 15px;
+            font-weight: 700;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .dropdown-btn:hover {
+            background-color: #3a5a8a;
+        }
+        .dropdown-btn::after {
+            content: '▼';
+            font-size: 0.7em;
+            transform: translateY(1px);
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #f9f9f9;
+            min-width: 260px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        .dropdown-content a:hover {
+            background-color: #ddd;
+        }
+        .dropdown-content a.disabled {
+            color: #999;
+            background-color: #f0f0f0;
+            cursor: not-allowed;
+        }
+        .dropdown.show .dropdown-content {
+            display: block;
+        }
+        .dropdown.show .dropdown-btn::after {
+            content: '▲';
+        }
+        
+        /* ▼▼▼ プログレスバー用CSS (パターンB: Bright Blue) ▼▼▼ */
+        .progress-container {
+            background-color: #e9ecef;
+            border-radius: 6px;
+            height: 30px;
+            width: 80%;
+            max-width: 400px;
+            margin: 15px auto;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #5dade2; /* Bright Blue */
+            transition: width 0.3s ease;
+            
+            background-image: linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0.2) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255, 255, 255, 0.2) 50%,
+                rgba(255, 255, 255, 0.2) 75%,
+                transparent 75%,
+                transparent
+            );
+            background-size: 40px 40px;
+            animation: progress-stripe 1s linear infinite;
+        }
+
+        @keyframes progress-stripe {
+            0% { background-position: 40px 0; }
+            100% { background-position: 0 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading" class="hidden">
+        <img src="./favicon.jpg" alt="Logo" class="loading-logo">
+        
+        <div id="default-loader" class="dots-loader">
+            <div class="dot1"></div> <div class="dot2"></div> <div class="dot3"></div>
+        </div>
+        
+        <div id="progress-wrapper" class="hidden" style="width: 100%; text-align: center;">
+            <div class="progress-container">
+                <div id="download-progress-bar" class="progress-bar"></div>
+            </div>
+        </div>
+
+        <p id="loading-text">データを読み込んでいます...</p>
+    </div>
+
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="./logo-color-2.jpg" alt="スタートアップ税理士法人 Logo" style="max-width: 180px;">
+        </div>
+        <h1>回答状況</h1>
+        
+        <div class="header-actions">
+            <div class="dropdown hidden" id="download-dropdown">
+                <button class="dropdown-btn" onclick="toggleDropdown(event)">ダウンロード</button>
+                <div class="dropdown-content">
+                    <a href="#" id="download-csv-btn">一覧をCSVでダウンロード</a>
+                    <a href="#" id="download-zip-btn">添付ファイルを一括ダウンロード</a>
+                    <a href="#" id="download-pdf-btn">回答PDFをまとめてダウンロード</a>
+                </div>
+            </div>
+        </div>
+        <div id="dashboard-content">
+        </div>
+    </div>
+
+    <script>
+        // ★★★ 令和8年用の新しいGAS WebアプリURLに書き換えてください ★★★
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/YOUR_NEW_WEB_APP_ID/exec';
+        const MY_SECRET_KEY = "StartupTax-Secret-Key-vB9^YWLiVoSW6y5"; 
+
+        let dashboardData = null;
+        let currentCompanyName = null;
+
+        function toggleDropdown(event) {
+            event.stopPropagation();
+            document.getElementById('download-dropdown').classList.toggle('show');
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.matches('.dropdown-btn')) {
+                const dropdowns = document.getElementsByClassName("dropdown");
+                for (let i = 0; i < dropdowns.length; i++) {
+                    dropdowns[i].classList.remove('show');
+                }
+            }
+        }
+
+        function downloadCSV() {
+            if (!dashboardData || !dashboardData.employees || dashboardData.employees.length === 0) {
+                alert('ダウンロードするデータがありません。');
+                return;
+            }
+
+            const headers = ['氏名', '年末調整実施可否', '住民税の徴収方法'];
+            const rows = dashboardData.employees.map(emp => {
+                return [
+                    `"${(emp.name || '').replace(/"/g, '""')}"`,
+                    `"${(emp.adjustment || '').replace(/"/g, '""')}"`,
+                    `"${(emp.residentTax || '').replace(/"/g, '""')}"`
+                ].join(',');
+            });
+
+            const csvContent = [headers.join(','), ...rows].join('\n');
+            const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+            const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            const safeCompanyName = (dashboardData.clientName || '不明な事業者').replace(/[\\/:"*?<>|]/g, '_');
+            const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            link.setAttribute("download", `${safeCompanyName}_回答状況_${today}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        async function processClientSideDownload(zipFileName, actionType) {
+            if (!currentCompanyName) {
+                alert('事業者名が取得できていません。');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const loadingText = document.getElementById('loading-text');
+            const progressWrapper = document.getElementById('progress-wrapper');
+            const progressBar = document.getElementById('download-progress-bar');
+            const defaultLoader = document.getElementById('default-loader');
+
+            loading.classList.remove('hidden');
+            progressWrapper.classList.remove('hidden');
+            defaultLoader.classList.add('hidden');
+            progressBar.style.width = '0%';
+            loadingText.textContent = 'ダウンロードリストを取得中...';
+
+            try {
+                const listResponse = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: actionType,
+                        company: currentCompanyName,
+                        secret: MY_SECRET_KEY
+                    })
+                });
+                const listResult = await listResponse.json();
+                
+                if (listResult.result !== 'success') throw new Error(listResult.message);
+                
+                const files = listResult.files;
+                if (files.length === 0) {
+                    alert('ダウンロード対象のファイルがありませんでした。');
+                    return; 
+                }
+
+                const zip = new JSZip();
+                const total = files.length;
+                let count = 0;
+
+                for (const file of files) {
+                    count++;
+                    const percentage = Math.round((count / total) * 100);
+                    progressBar.style.width = percentage + '%';
+                    loadingText.textContent = `${count} / ${total} ファイル (${percentage}%) を処理中...`;
+                    
+                    try {
+                        const contentResponse = await fetch(GAS_WEB_APP_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                action: 'getFileContent',
+                                fileId: file.id,
+                                secret: MY_SECRET_KEY
+                            })
+                        });
+                        const contentResult = await contentResponse.json();
+                        
+                        if (contentResult.result === 'success') {
+                            zip.file(file.name, contentResult.data, {base64: true});
+                        } else {
+                            console.error(`Skipped ${file.name}: ${contentResult.message}`);
+                            zip.file(`エラー_${file.name}.txt`, `ダウンロード失敗: ${contentResult.message}`);
+                        }
+                    } catch (e) {
+                        console.error(`Error downloading ${file.name}`, e);
+                    }
+                }
+
+                loadingText.textContent = 'ZIPファイルを生成中...';
+                const content = await zip.generateAsync({type: "blob"});
+                saveAs(content, zipFileName);
+                alert('ダウンロードが完了しました。');
+
+            } catch (e) {
+                alert(`エラーが発生しました: ${e.message}`);
+            } finally {
+                loading.classList.add('hidden');
+                progressWrapper.classList.add('hidden');
+                defaultLoader.classList.remove('hidden');
+                loadingText.textContent = 'データを読み込んでいます...';
+            }
+        }
+
+        function downloadFilesZip() {
+            if (this.classList && this.classList.contains('disabled')) return;
+            const fileName = `${currentCompanyName}_添付ファイル一括.zip`;
+            processClientSideDownload(fileName, 'getZipFileList');
+        }
+        
+        function downloadPdfs() {
+            if (this.classList && this.classList.contains('disabled')) return;
+            const fileName = `${currentCompanyName}_回答PDF一括.zip`;
+            generateClientSidePdfs(fileName);
+        }
+
+        async function generateClientSidePdfs(zipFileName) {
+            if (!currentCompanyName) {
+                alert('事業者名が取得できていません。');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const loadingText = document.getElementById('loading-text');
+            const progressWrapper = document.getElementById('progress-wrapper');
+            const progressBar = document.getElementById('download-progress-bar');
+            const defaultLoader = document.getElementById('default-loader');
+            
+            loading.classList.remove('hidden');
+            progressWrapper.classList.remove('hidden');
+            defaultLoader.classList.add('hidden');
+            progressBar.style.width = '0%';
+            loadingText.textContent = '回答データを取得中...';
+
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'getAllEmployeeData',
+                        company: currentCompanyName,
+                        secret: MY_SECRET_KEY
+                    })
+                });
+                const result = await response.json();
+                if (result.result !== 'success') throw new Error(result.message);
+                
+                const employees = result.employees;
+                if (employees.length === 0) {
+                    alert('データがありません。');
+                    return;
+                }
+
+                const allKeys = Object.keys(employees[0]);
+                const ignoreKeys = ['タイムスタンプ', '回答表示URL', '最終更新日時', '事業者名', 'メールアドレス'];
+
+                const zip = new JSZip();
+                const total = employees.length;
+                let count = 0;
+                
+                const pdfContent = document.getElementById('pdf-content');
+
+                for (const emp of employees) {
+                    count++;
+                    const percentage = Math.round((count / total) * 100);
+                    progressBar.style.width = percentage + '%';
+                    loadingText.textContent = `${count} / ${total} 名のPDFを作成中... (${percentage}%)`;
+
+                    document.getElementById('pdf-header-company').textContent = currentCompanyName;
+                    document.getElementById('pdf-header-name').textContent = `${emp['姓']} ${emp['名']}`;
+                    // フリガナ欄を「回答ID」に変更
+                    document.getElementById('pdf-header-id').textContent = emp['回答ID'] || '';
+
+                    const table = document.getElementById('pdf-details-table');
+                    table.innerHTML = '';
+                    
+                    allKeys.forEach(key => {
+                        if (ignoreKeys.includes(key)) return;
+                        if (key.endsWith('URL')) return;
+                        // 回答IDはヘッダーに出すので、表からは除外しても良いですが、念のため残す設定にしています
+
+                        let value = emp[key];
+                        if (value === '' || value === null || value === undefined) {
+                            value = ' '; 
+                        }
+                        if (typeof value === 'string') {
+                            if (key.endsWith('FileName')) {
+                                value = value.replace(/\n/g, '<br>');
+                            }
+                        }
+                        if (key.includes('金額') && value && !isNaN(Number(String(value).replace(/,/g, '')))) {
+                             value = Number(String(value).replace(/,/g, '')).toLocaleString('ja-JP') + ' 円';
+                        }
+                        if (key.includes('_住所同じ')) {
+                            value = (String(value).toUpperCase() === 'TRUE' || value === true) ? '該当' : '';
+                        }
+                        
+                        const tr = document.createElement('tr');
+                        tr.style.border = "1px solid #333";
+
+                        const th = document.createElement('th');
+                        th.style.cssText = "width: 40%; background-color: #f5f5f5; border: 1px solid #333; padding: 4px 8px; text-align: left; font-weight: normal; word-break: break-all;";
+                        th.textContent = key.replace('FileName', ' (添付書類)');
+
+                        const td = document.createElement('td');
+                        td.style.cssText = "width: 60%; border: 1px solid #333; padding: 4px 8px; word-break: break-all;";
+                        td.innerHTML = value;
+
+                        tr.appendChild(th);
+                        tr.appendChild(td);
+                        table.appendChild(tr);
+                    });
+
+                    const opt = {
+                        margin:       10,
+                        filename:     'doc.pdf',
+                        image:        { type: 'jpeg', quality: 0.98 },
+                        html2canvas:  { scale: 2, useCORS: true }, 
+                        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+                    };
+
+                    const pdfBlob = await html2pdf().set(opt).from(pdfContent).output('blob');
+                    const safeName = `${emp['姓']}_${emp['名']}`.replace(/[\\/:"*?<>|]/g, '_');
+                    zip.file(`${safeName}_回答内容.pdf`, pdfBlob);
+
+                    await new Promise(resolve => setTimeout(resolve, 20));
+                }
+
+                loadingText.textContent = 'ZIPファイルを圧縮中...';
+                const content = await zip.generateAsync({type: "blob"});
+                saveAs(content, zipFileName);
+                alert('PDFの一括ダウンロードが完了しました。');
+
+            } catch (e) {
+                console.error(e);
+                alert(`エラー: ${e.message}`);
+            } finally {
+                loading.classList.add('hidden');
+                progressWrapper.classList.add('hidden');
+                defaultLoader.classList.remove('hidden');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('download-csv-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                if (this.classList.contains('disabled')) return;
+                downloadCSV();
+                toggleDropdown(new Event('click'));
+            });
+
+            document.getElementById('download-zip-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                if (this.classList.contains('disabled')) return;
+                downloadFilesZip();
+                toggleDropdown(new Event('click'));
+            });
+            
+            document.getElementById('download-pdf-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                if (this.classList.contains('disabled')) return;
+                downloadPdfs();
+                toggleDropdown(new Event('click'));
+            });
+
+            loadDashboardData();
+        });
+
+        async function loadDashboardData() {
+            const params = new URLSearchParams(window.location.search);
+            const companyName = params.get('company');
+            currentCompanyName = companyName; 
+            
+            const container = document.getElementById('dashboard-content');
+            const loading = document.getElementById('loading');
+            
+            if (!companyName) {
+                container.innerHTML = `<p style="color: red; text-align: center;">エラー: 対象の事業者名が指定されていません。</p>`;
+                loading.classList.add('hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${GAS_WEB_APP_URL}?action=getClientDashboardData&company=${encodeURIComponent(companyName)}&secret=${MY_SECRET_KEY}`);
+                const result = await response.json();
+
+                if (result.result !== 'success') {
+                    throw new Error(result.message);
+                }
+
+                const data = result.data;
+                dashboardData = data; 
+                
+                let contentHtml = `
+                    <div class="overview-panel">
+                        <div class="overview-item">
+                            事業者名
+                            <span>${escapeHtml(data.clientName)}</span>
+                        </div>
+                        <div class="overview-item">
+                            回答済み従業員
+                            <span>${data.employeeCount}<span class="unit">名</span></span>
+                        </div>
+                    </div>
+                `;
+
+                contentHtml += `
+                    <div class="section">
+                        <div class="section-title">回答状況一覧</div>
+                `;
+
+                if (data.employeeCount > 0) {
+                        document.getElementById('download-dropdown').classList.remove('hidden');
+
+                    contentHtml += `
+                        <table id="employee-list-table">
+                            <thead>
+                                <tr>
+                                    <th class="name-cell">氏名</th>
+                                    <th>年末調整実施可否</th>
+                                    <th>住民税の徴収方法</th>
+                                    <th class="btn-cell"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    data.employees.forEach(employee => {
+                        contentHtml += `
+                            <tr>
+                                <td class="name-cell" data-label="氏名"><span>${escapeHtml(employee.name)}</span></td>
+                                <td data-label="年末調整実施可否">${escapeHtml(employee.adjustment)}</td>
+                                <td data-label="住民税の徴収方法">${escapeHtml(employee.residentTax)}</td>
+                                <td class="btn-cell">
+                                    <a href="${employee.viewUrl}" target="_blank" rel="noopener noreferrer" class="btn-confirm">
+                                        回答確認
+                                    </a>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    contentHtml += `</tbody></table>`;
+                } else {
+                    contentHtml += '<p style="text-align:center; padding: 20px 0;">まだ回答済みの従業員はいません。</p>';
+                }
+                
+                contentHtml += `</div>`;
+                
+                container.innerHTML = contentHtml;
+
+            } catch (error) {
+                container.innerHTML = `<p style="color: red; text-align: center;">データの読み込みに失敗しました: ${error.message}</p>`;
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+        
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return '';
+            return str.replace(/[&<>"']/g, function(match) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[match];
+            });
+        }
+    </script>
+    
+    <div id="pdf-template-container" style="position: fixed; left: -9999px; top: 0;">
+        <div id="pdf-content" style="width: 210mm; min-height: 297mm; padding: 15mm; background: white; box-sizing: border-box; font-family: 'HeiseiMinchoStd-W3', 'Ryumin', serif; color: #333; line-height: 1.5;">
+            
+            <div style="text-align: center; border-bottom: 2px solid #333; margin-bottom: 25px; padding-bottom: 10px;">
+                <h1 style="margin: 0; font-size: 22px; font-weight: bold;">年末調整 提出情報</h1>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <table style="width: 100%; font-size: 12px; border-collapse: collapse; border: 1px solid #333;">
+                    <tr>
+                        <td style="width: 15%; font-weight: bold; background-color: #f5f5f5; border: 1px solid #333; padding: 6px;">事業者名</td>
+                        <td colspan="3" style="border: 1px solid #333; padding: 6px;" id="pdf-header-company"></td>
+                    </tr>
+                    <tr>
+                        <td style="width: 15%; font-weight: bold; background-color: #f5f5f5; border: 1px solid #333; padding: 6px;">氏名</td>
+                        <td style="width: 35%; border: 1px solid #333; padding: 6px;" id="pdf-header-name"></td>
+                        <td style="width: 15%; font-weight: bold; background-color: #f5f5f5; border: 1px solid #333; padding: 6px;">回答ID</td>
+                        <td style="width: 35%; border: 1px solid #333; padding: 6px;" id="pdf-header-id"></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div>
+                <h3 style="font-size: 14px; background-color: #eee; padding: 5px 10px; margin-bottom: 0; border-top: 1px solid #333; border-left: 1px solid #333; border-right: 1px solid #333;">回答内容</h3>
+                <table id="pdf-details-table" style="width: 95%; margin: 0 auto; border-collapse: collapse; font-size: 10px;">
+                </table>
+            </div>
+            
+        </div>
+    </div>
+</body>
+</html>

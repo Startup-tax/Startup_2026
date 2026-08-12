@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>年末調整情報 提出フォーム</title>
+    
+    <link rel="icon" href="./favicon.jpg" type="image/jpeg">
+    <link rel="apple-touch-icon" href="./logo-color-2.jpg">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #1e3656; --secondary-color: #5dade2; --accent-color: #e52128;
+            --success-color: #27ae60; --light-gray: #f8f9fa; --medium-gray: #dee2e6;
+            --dark-gray: #495057; --border-radius: 8px;
+        }
+        body { 
+            font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; 
+            line-height: 1.6; color: #333; max-width: 800px; 
+            margin: 20px auto; padding: 0 20px; background-color: #f4f7f9;
+            -webkit-text-size-adjust: 100%;
+            -moz-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+        h1 { 
+            color: var(--primary-color); text-align: center; font-weight: 700;
+            margin-top: 0; margin-bottom: 30px;
+        }
+        .form-container, .confirm-container { 
+            background-color: #fff; padding: 30px; border-radius: var(--border-radius); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
+        }
+        .confirm-container, #complete { border-top: 5px solid var(--secondary-color); }
+        fieldset { 
+            border: 1px solid var(--medium-gray); padding: 20px; margin-bottom: 20px; 
+            border-radius: var(--border-radius); 
+        }
+        .fieldset-title {
+            font-weight: 700; color: var(--primary-color); font-size: 1.2em;
+            margin: -10px 0 20px 0; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 8px;
+        }
+        .form-group, .form-row { margin-bottom: 20px; }
+        .form-row { display: flex; gap: 20px; }
+        .form-row > div { flex: 1; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #34495e; }
+        input[type="text"], input[type="email"], input[type="file"], select, textarea { 
+            width: 100%; padding: 12px; border: 1px solid #ccc; 
+            border-radius: var(--border-radius); box-sizing: border-box; 
+            font-family: inherit; font-size: inherit; 
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(93, 173, 226, 0.25);
+            outline: none;
+        }
+        input[readonly] { background-color: #e9e9e9; }
+        .radio-group label, .checkbox-group label { display: inline-block; margin-right: 15px; font-weight: normal; }
+        .hidden { display: none !important; }
+
+        .date-select-group { 
+            display: flex; 
+            gap: 10px; 
+            align-items: center; 
+        }
+        .date-select-group .date-row {
+            display: contents;
+        }
+        .date-select-group select { 
+            flex-grow: 1; 
+        }
+
+        .btn-container { text-align: center; margin-top: 30px; }
+        button { 
+            background-color: var(--secondary-color); color: white; padding: 14px 28px; 
+            border: none; border-radius: var(--border-radius); cursor: pointer; 
+            font-size: 16px; font-weight: 700;
+            transition: background-color 0.3s, transform 0.2s; 
+        }
+        button:hover { background-color: #4aa3d3; transform: translateY(-2px); }
+        #confirm-back-btn { background-color: #95a5a6; }
+        .btn-remove { background-color: #e74c3c; font-size: 12px; padding: 4px 10px; }
+        .btn-remove:hover { background-color: #c0392b; }
+        
+        #loading {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(255, 255, 255, 0.85);
+            flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; backdrop-filter: blur(4px);
+        }
+        #loading:not(.hidden) { display: flex; }
+        .loading-logo { max-width: 150px; margin-bottom: 20px; }
+        #loading p { color: var(--primary-color); font-size: 1.2em; margin-top: 20px; font-weight: 700; }
+        #loading p.sub-text { font-size: 0.9em; color: #555; margin-top: 10px; text-align: center; font-weight: 400; }
+
+        .dots-loader { display: flex; justify-content: center; align-items: center; height: 40px; }
+        .dots-loader div { width: 15px; height: 15px; background-color: var(--primary-color); border-radius: 50%; margin: 0 5px; animation: bounce 1.4s infinite ease-in-out both; }
+        .dots-loader .dot1 { animation-delay: -0.32s; } .dots-loader .dot2 { animation-delay: -0.16s; } .dots-loader .dot3 { animation-delay: 0s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+
+        #complete {
+            background-color: #fff; padding: 40px; border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08); text-align: center;
+            max-width: 600px; margin: 40px auto;
+        }
+        .complete-icon { color: var(--success-color); margin-bottom: 20px; }
+        
+        #confirm-contents h2, #complete h2 { color: var(--primary-color); margin-bottom: 15px; font-size: 1.8em; text-align: center; }
+        #complete > #complete-message-content > p { color: #34495e; line-height: 1.8; text-align: center; }
+        
+        .answer-id-box {
+            background-color: var(--light-gray); border: 1px solid var(--medium-gray);
+            border-top: 3px solid var(--primary-color); border-radius: var(--border-radius);
+            padding: 20px; margin: 25px auto; max-width: 90%;
+        }
+        .answer-id-box p { margin: 0 0 10px 0; padding: 0; text-align: center; color: var(--dark-gray); font-size: 1em; line-height: 1.6; }
+        .answer-id-box .id-code {
+            font-family: inherit; font-size: 1.6em; font-weight: bold; color: var(--accent-color);
+            background-color: #fff; padding: 10px 15px; border-radius: 4px; display: inline-block;
+            letter-spacing: 2px; border: 1px solid #ddd; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .privacy-notice { font-size: 0.85em; color: #7f8c8d; border-top: 1px solid #ecf0f1; padding-top: 20px; margin-top: 20px; text-align: left; }
+        .complete-logo-wrapper { margin-top: 30px; text-align: center; }
+        .complete-logo { max-width: 180px; }
+        .complete-logo-wrapper span { display: none; }
+
+        #confirm-table { width: 100%; border-collapse: collapse; margin-top: 25px; }
+        #confirm-table th, #confirm-table td { border: 1px solid var(--medium-gray); padding: 12px 15px; text-align: left; word-break: break-all; }
+        #confirm-table th { background-color: var(--light-gray); width: 35%; font-weight: 700; color: var(--primary-color); }
+        
+        .yen-input-wrapper { position: relative; }
+        .yen-input-wrapper input { padding-right: 2em; text-align: right; }
+        .yen-input-wrapper::after { content: '円'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #555; pointer-events: none; }
+
+        .tooltip-wrapper { display: flex; align-items: baseline; gap: 10px; }
+        .tooltip-container { position: relative; display: inline-block; }
+        .tooltip-icon { display: flex; justify-content: center; align-items: center; width: 20px; height: 20px; background-color: #bdc3c7; color: white; border-radius: 50%; font-weight: bold; cursor: pointer; font-size: 14px; user-select: none; }
+        .tooltip-text { visibility: hidden; opacity: 0; width: 250px; background-color: #34495e; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -125px; transition: opacity 0.3s; font-size: 0.8em; }
+        .tooltip-text::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #34495e transparent transparent transparent; }
+        .tooltip-container:hover .tooltip-text, .tooltip-container.show .tooltip-text { visibility: visible; opacity: 1; }
+        
+        .income-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            max-width: 450px;
+        }
+        .income-input-group .yen-input-wrapper {
+            flex: 2;
+        }
+        .income-input-group select {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .form-group-ssmall input, .form-group-ssmall select { max-width: 100px; }
+        .form-group-small .yen-input-wrapper { display: block;  max-width: 200px; }
+        .form-group-small input, .form-group-small select { max-width: 200px; }
+        .form-group-medium input, .form-group-medium select { max-width: 400px; }
+        .form-group-large input, .form-group-large select { max-width: 500px; }
+
+        .current-files {
+            font-size: 0.9em;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 8px;
+        }
+        .current-files strong {
+            font-weight: bold;
+            color: #495057;
+        }
+        .current-files a {
+            color: #1e3656;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        .current-files a:hover {
+            text-decoration: underline;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+        }
+        .btn-delete-file {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .btn-delete-file:hover {
+            background-color: #c0392b;
+        }
+
+        .mobile-break {
+            display: none;
+        }
+        
+        @media (max-width: 600px) {
+            body { padding: 0 10px; } 
+            h1 { font-size: 1.6em; line-height: 1.4; }
+
+            .mobile-break {
+                display: block;
+            }
+
+            .form-container, .confirm-container, #complete { padding: 20px; }
+            .form-row { flex-direction: column; gap: 0; }
+            .form-row > div { margin-bottom: 20px; }
+            .form-row > div:last-child { margin-bottom: 0; }
+            #confirm-table th, #confirm-table td { display: block; width: 100%; text-align: left !important; }
+            #confirm-table th { border-bottom: none; background-color: transparent; font-size: 0.9em; color: var(--primary-color); padding-bottom: 3px; }
+            #confirm-table td { border-top: none; padding-top: 0; }
+            button { width: 100%; padding: 15px; }
+            #confirm-back-btn { margin-top: 10px; }
+            
+            label {
+                word-break: break-word;
+            }
+
+            .date-select-group {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+            .date-select-group .date-row {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                width: 100%;
+            }
+            .date-row select {
+                flex: 1 1 0;
+                min-width: 50px;
+            }
+            .date-row > span {
+                flex-shrink: 0;
+            }
+            
+            /* スマホ用 その他収入グループの調整 */
+            .income-input-group {
+                flex-direction: column;
+                align-items: stretch;
+                max-width: 100%;
+            }
+            .income-input-group .yen-input-wrapper {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="form-contents" class="form-container">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="./logo-color-2.jpg" alt="スタートアップ税理士法人 Logo" style="max-width: 180px;">
+        </div>
+        <h1 id="form-title">年末調整情報<br class="mobile-break">提出フォーム</h1>
+         <form id="main-form" class="h-adr" novalidate>
+            <input type="hidden" name="editId" id="edit-id">
+            <span class="p-country-name" style="display:none;">Japan</span>
+            <fieldset>
+                <div class="fieldset-title">ご本人情報</div>
+                <div class="form-group form-group-medium">
+                    <label>事業者名</label>
+                    <input type="hidden" name="company_name" id="company_name_hidden">
+                    <input type="text" id="company_name_display" readonly>
+                </div>
+                <div class="form-group form-group-medium"><label>メールアドレス</label><input type="email" name="email_address" required></div>
+                <div class="form-row">
+                    <div><label>姓</label><input type="text" id="name_last" name="last_name" required></div>
+                    <div><label>名</label><input type="text" id="name_first" name="first_name" required></div>
+                </div>
+                <div class="form-row">
+                    <div><label>姓フリガナ</label><input type="text" id="kana_last" name="last_name_furigana" pattern="[ァ-ヶー]+" title="全角カタカナで入力してください" required></div>
+                    <div><label>名フリガナ</label><input type="text" id="kana_first" name="first_name_furigana" pattern="[ァ-ヶー]+" title="全角カタカナで入力してください" required></div>
+                </div>
+                <div class="form-group">
+                    <label>生年月日</label>
+                    <div class="date-select-group" data-prefix="user">
+                        <div class="date-row">
+                            <select class="era"><option value="">元号</option></select>
+                            <select class="year"><option value="">年</option></select><span>年</span>
+                        </div>
+                        <div class="date-row">
+                            <select class="month"><option value="">月</option></select><span>月</span>
+                            <select class="day"><option value="">日</option></select><span>日</span>
+                        </div>
+                    </div>
+                    <input type="hidden" name="birth_date">
+                </div>
+                <div class="form-group form-group-small">
+				<div class="tooltip-wrapper">
+    				<label>郵便番号</label>
+    				<div class="tooltip-container">
+    					<span class="tooltip-icon">!</span>
+    					<div class="tooltip-text">令和8年12月31日時点の住民票住所を記載してください</div>
+    				</div>
+				</div>
+					 <input type="text" name="postal_code" class="p-postal-code" placeholder="例: 1600022" required>
+				</div>
+                <div class="form-group form-group-large">
+                    <label>住所1（市区町村、番地）</label>
+                    <input type="text" id="address1" name="address1" class="p-region p-locality p-street-address" placeholder="例: 東京都新宿区新宿4-3-17" required>
+                </div>
+                <div class="form-group form-group-large">
+                    <label>住所2（建物名、部屋番号など）</label>
+                    <input type="text" id="address2" name="address2" placeholder="例: ヒューリック新宿四丁目ビル">
+                </div>
+                <div class="form-group form-group-medium">
+                    <label>世帯主の氏名</label>
+                    <input type="text" name="householder_name">
+                </div>
+                <div class="form-group form-group-ssmall">
+                    <label>世帯主の続柄</label>
+                    <select name="householder_relationship">
+                    	<option value=""></option>
+                        <option value="本人">本人</option> <option value="妻">妻</option><option value="夫">夫</option><option value="息子">息子</option><option value="娘">娘</option>
+                        <option value="実父">実父</option><option value="実母">実母</option><option value="義父">義父</option>
+                        <option value="義母">義母</option><option value="祖父">祖父</option><option value="祖母">祖母</option>
+                        <option value="孫">孫</option><option value="兄">兄</option><option value="姉">姉</option>
+                        <option value="弟">弟</option><option value="妹">妹</option><option value="叔父">叔父</option><option value="叔母">叔母</option><option value="甥">甥</option><option value="姪">姪</option><option value="その他">その他</option>
+                    </select>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <div class="fieldset-title">年末調整実施確認</div>
+                <div class="form-group">
+                    <label>当社で年末調整をおこないますか？</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="year_end_adjustment" value="はい" onchange="toggleMainSections(this.value)" checked> はい</label>
+                        <label><input type="radio" name="year_end_adjustment" value="他社でおこなう" onchange="toggleMainSections(this.value)"> 他社でおこなう</label>
+                        <label><input type="radio" name="year_end_adjustment" value="確定申告する" onchange="toggleMainSections(this.value)"> 確定申告する</label>
+                    </div>
+                     <p style="font-size: 0.8em; color: #555; margin-top: 5px;">
+                        他社で給与収入がある場合は、原則、確定申告が必要となりますが、収入が多い勤務先で年末調整をおこなうことができます。<br>
+                        ※確定申告をされる場合でも年末調整をおこなうことが可能です<br>
+                        ※ただし、給与収入が2,000万円を超える方は年末調整対象外となり、確定申告が必要です。
+                     </p>
+                </div>
+            </fieldset>
+            
+            <div id="main-sections">
+            </div>
+
+            <div id="submit-button-container" class="btn-container">
+                <button type="button" id="main-submit-btn" onclick="showConfirm()">確認画面へ</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="confirm-contents" class="confirm-container hidden"></div>
+    <div id="loading" class="hidden">
+        <img src="./favicon.jpg" alt="Logo" class="loading-logo">
+        <div class="dots-loader">
+            <div class="dot1"></div> <div class="dot2"></div> <div class="dot3"></div>
+        </div>
+        <p>送信しています...</p>
+        <p class="sub-text">この処理には数秒かかることがあります。<br>画面を閉じずにお待ちください。</p>
+    </div>
+    <div id="complete" class="hidden">
+        <div class="complete-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <polyline points="9 15 11 17 15 13"></polyline>
+            </svg>
+        </div>
+        <div id="complete-message-content"></div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://yubinbango.github.io/yubinbango/yubinbango.js" charset="UTF-8"></script>
+    <script src="https://unpkg.com/wanakana"></script>
+    
+    <script>
+        // ★★★ 令和8年用の新しいGAS WebアプリURLに書き換えてください ★★★
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/YOUR_NEW_WEB_APP_ID/exec';
+        const MY_SECRET_KEY = "StartupTax-Secret-Key-vB9^YWLiVoSW6y5"; // セキュリティー用
+        const form = document.getElementById('main-form');
+        const formContents = document.getElementById('form-contents');
+        const confirmContents = document.getElementById('confirm-contents');
+        const loading = document.getElementById('loading');
+        const complete = document.getElementById('complete');
+        const mainSectionsContainer = document.getElementById('main-sections');
+        const MAX_DEPENDENTS = 6;
+        const warekiData = {
+            '令和': { start: 2019, years: new Date().getFullYear() - 2019 + 1 },
+            '平成': { start: 1989, years: 31 },
+            '昭和': { start: 1926, years: 64 },
+            '大正': { start: 1912, years: 15 }
+        };
+
+        function setupWarekiDateFields(group) {
+            const eraSelect = group.querySelector('.era');
+            const yearSelect = group.querySelector('.year');
+            const monthSelect = group.querySelector('.month');
+            const daySelect = group.querySelector('.day');
+            Object.keys(warekiData).forEach(era => {eraSelect.options[eraSelect.options.length] = new Option(era, era);});
+            for (let i = 1; i <= 12; i++) monthSelect.options[monthSelect.options.length] = new Option(i, i);
+            for (let i = 1; i <= 31; i++) daySelect.options[daySelect.options.length] = new Option(i, i);
+            eraSelect.addEventListener('change', () => {
+                yearSelect.innerHTML = '<option value="">年</option>';
+                const era = eraSelect.value;
+                if (era && warekiData[era]) {
+                    for (let i = 1; i <= warekiData[era].years; i++) {
+                        yearSelect.options[yearSelect.options.length] = new Option(i === 1 ? '元' : i, i);
+                    }
+                }
+            });
+        }
+
+        function syncAddress(destPrefix, checkbox) {
+            const hiddenInput = form.querySelector(`[name="${destPrefix}_address_same_as_user"]`);
+            const userAddr1 = document.getElementById('address1').value;
+            const userAddr2 = document.getElementById('address2').value;
+            const destAddr1 = document.getElementById(`${destPrefix}_address1`);
+            const destAddr2 = document.getElementById(`${destPrefix}_address2`);
+            
+            if (checkbox.checked) {
+                destAddr1.value = userAddr1;
+                destAddr2.value = userAddr2;
+                destAddr1.readOnly = true;
+                destAddr2.readOnly = true;
+                if(hiddenInput) hiddenInput.value = "true";
+            } else {
+                destAddr1.readOnly = false;
+                destAddr2.readOnly = false;
+                if(hiddenInput) hiddenInput.value = "false";
+            }
+        }
+
+        function toggleSection(show, sectionId) {
+            const section = document.getElementById(sectionId);
+            if (!section) return;
+            section.classList.toggle('hidden', !show);
+            section.querySelectorAll('input, select, textarea').forEach(input => {
+                if (!input.readOnly) {
+                    input.disabled = !show;
+                }
+            });
+            if (sectionId === 'dependents-section' && !show) {
+                for (let i = 1; i <= MAX_DEPENDENTS; i++) {
+                    removeDependentField(i);
+                }
+                document.getElementById('add-dependent-btn').classList.remove('hidden');
+            }
+        }
+
+        function toggleMainSections(value) {
+            const show = value === 'はい';
+            mainSectionsContainer.classList.toggle('hidden', !show);
+            mainSectionsContainer.querySelectorAll('input, select, button').forEach(input => {
+                input.disabled = !show;
+            });
+            if (!show) {
+                document.getElementById('submit-button-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            // 「他社でおこなう」の場合に「普通徴収」を選択
+            if (value === '他社でおこなう') {
+                const normalTaxRadio = document.querySelector('input[name="resident_tax"][value="普通徴収"]');
+                if (normalTaxRadio) {
+                    normalTaxRadio.checked = true;
+                }
+            }
+        }
+        
+        function addDependentField() {
+            const nextDependentGroup = document.querySelector('#dependents-section .hidden[id^="dependent-group-"]');
+            if (nextDependentGroup) {
+                nextDependentGroup.classList.remove('hidden');
+            }
+            
+            const anyHidden = document.querySelector('#dependents-section .hidden[id^="dependent-group-"]');
+            if (!anyHidden) {
+                document.getElementById('add-dependent-btn').classList.add('hidden');
+            }
+        }
+
+        function removeDependentField(dependentNumber) {
+            const groupToRemove = document.getElementById(`dependent-group-${dependentNumber}`);
+            if (!groupToRemove) return;
+
+            groupToRemove.querySelectorAll('input[type="text"], input[type="hidden"], input[type="file"], select, textarea').forEach(el => el.value = '');
+            groupToRemove.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+            groupToRemove.querySelectorAll('input[type="radio"]').forEach(el => {
+                const isDefaultNo = el.value === 'なし' && (el.name.includes('other_income_existence') || el.name.includes('disability_certificate_existence') || el.name.includes('non_resident_dependent_status'));
+                el.checked = isDefaultNo;
+            });
+            
+            if (dependentNumber > 1) {
+                groupToRemove.classList.add('hidden');
+            }
+            document.getElementById('add-dependent-btn').classList.remove('hidden');
+        }
+        
+        function formatCurrency(event) {
+    		if (event.isComposing) {
+        		return;
+    		}
+
+    		const input = event.target;
+    		let value = input.value;
+
+    		value = value.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
+        		return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+    		});	
+
+    		value = value.replace(/[^0-9]/g, '');
+
+    		if (value === '') {
+        		input.value = '';
+        		return;
+    		}
+    		input.value = Number(value).toLocaleString('ja-JP');
+		}
+
+        function populateMainSections() {
+            mainSectionsContainer.innerHTML = `
+                <fieldset>
+					<div class="fieldset-title">令和8年(2026年)に入社された方</div>
+					<div class="form-group">
+						<label>令和8年(2026年)中に退職した勤務先はありますか？</label>
+						<div class="radio-group">
+							<label><input type="radio" name="previous_job" value="あり" onchange="toggleSection(this.value === 'あり', 'gensen-group')"> あり</label>
+							<label><input type="radio" name="previous_job" value="なし" onchange="toggleSection(this.value === 'あり', 'gensen-group')" checked> なし</label>
+						</div>
+					</div>
+					<div id="gensen-group" class="form-group hidden"><label>前職の源泉徴収票</label><input type="file" name="previous_job_file" multiple>
+						<p style="font-size: 0.8em; color: #555; margin-top: 5px;">※令和8年(2026年)中に退職した勤務先が複数ある場合は、すべての勤務先の源泉徴収票をアップロードしてください。</p></div>
+				</fieldset>
+                <fieldset>
+                    <div class="fieldset-title">その他収入について</div>
+                    <div class="form-group">
+                            <label>給与収入以外の収入がある場合は「あり」を選択してください。</label>
+                            <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※例：公的年金、不動産収入、原稿料など<br> ※国や自治体から支給される手当や給付金は収入には含みません。</p>
+                        <div class="radio-group">
+                            <label><input type="radio" name="other_income_existence" value="あり" onchange="toggleSection(this.value === 'あり', 'other-income-group')"> あり</label>
+                            <label><input type="radio" name="other_income_existence" value="なし" onchange="toggleSection(this.value === 'あり', 'other-income-group')" checked>なし</label>
+                        </div>
+                    </div>
+                    <div id="other-income-group" class="form-group hidden">
+                        <div class="form-group form-group-small">
+                            <label>年金収入金額</label>
+                            <div class="yen-input-wrapper"><input type="text" name="user_pension_income" class="currency-input" inputmode="numeric"></div>
+                        </div>
+                        <div class="form-group form-group-small">
+                            <label>事業収入金額</label>
+                            <div class="yen-input-wrapper"><input type="text" name="user_business_income" class="currency-input" inputmode="numeric"></div>
+                        </div>
+                        <div class="form-group form-group-small">
+                            <label>退職手当等収入金額</label>
+                            <div class="yen-input-wrapper"><input type="text" name="user_severance_pay_income" class="currency-input" inputmode="numeric"></div>
+                        </div>
+                        <div class="form-group form-group-small">
+                            <label>その他収入金額</label>
+                            <div class="yen-input-wrapper"><input type="text" name="user_misc_income" class="currency-input" inputmode="numeric"></div>
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <div class="fieldset-title">住民税</div>
+                    <div class="form-group form-group-small"><label>住民税徴収方法</label>
+                    	<p style="font-size: 0.8em; color: #555; margin-top: 5px;">※年末調整を当社でおこなう場合は、原則、特別徴収を選択してください。</p></div>
+                    	<div class="radio-group">
+                            <label><input type="radio" name="resident_tax" value="特別徴収" checked> 特別徴収</label>
+                            <label><input type="radio" name="resident_tax" value="普通徴収"> 普通徴収</label>
+                        </div>
+                </fieldset>
+                
+                <fieldset>
+                    <div class="fieldset-title">配偶者情報</div>
+                    <div class="form-group"><label>配偶者有無</label><div class="radio-group"><label><input type="radio" name="spouse_existence" value="あり" onchange="toggleSection(this.value === 'あり', 'spouse-group')"> あり</label><label><input type="radio" name="spouse_existence" value="なし" onchange="toggleSection(this.value === 'あり', 'spouse-group')" checked> なし</label></div></div>
+                    <div id="spouse-group" class="hidden">
+                        <div class="form-row">
+                            <div><label>姓</label><input type="text" id="spouse_name_last" name="spouse_last_name"></div>
+                            <div><label>名</label><input type="text" id="spouse_name_first" name="spouse_first_name"></div>
+                        </div>
+                        <div class="form-row">
+                            <div><label>姓フリガナ</label><input type="text" id="spouse_kana_last" name="spouse_last_name_furigana" pattern="[ァ-ヶー]+" title="全角カタカナで入力してください"></div>
+                            <div><label>名フリガナ</label><input type="text" id="spouse_kana_first" name="spouse_first_name_furigana" pattern="[ァ-ヶー]+" title="全角カタカナで入力してください"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>生年月日</label>
+                            <div class="date-select-group" data-prefix="spouse">
+                                <div class="date-row">
+                                    <select class="era"><option value="">元号</option></select>
+                                    <select class="year"><option value="">年</option></select><span>年</span>
+                                </div>
+                                <div class="date-row">
+                                    <select class="month"><option value="">月</option></select><span>月</span>
+                                    <select class="day"><option value="">日</option></select><span>日</span>
+                                </div>
+                            </div>
+                            <input type="hidden" name="spouse_birth_date">
+                        </div>
+                        <div class="form-group checkbox-group"><label><input type="checkbox" onchange="syncAddress('spouse', this)"> 本人と住所が同じ</label></div>
+                        <input type="hidden" name="spouse_address_same_as_user" value="false">
+                        <div class="form-group form-group-large"><label>住所1</label><input type="text" id="spouse_address1" name="spouse_address1"></div>
+                        <div class="form-group form-group-large"><label>住所2</label><input type="text" id="spouse_address2" name="spouse_address2"></div>
+                        <div class="form-group form-group-small">
+                            <div class="tooltip-wrapper"><label>給与収入金額</label>
+                                <div class="tooltip-container">
+                                    <span class="tooltip-icon">!</span>
+                                    <div class="tooltip-text">令和8年(2026年)中の収入を記載してください。<br>総支給額から非課税交通費を除いた金額です。</div>
+                                </div>
+                            </div>
+                            <div class="yen-input-wrapper"><input type="text" name="spouse_salary_income" class="currency-input" inputmode="numeric" required></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="tooltip-wrapper">
+                                <label>その他収入有無（退職手当等を含む）</label>
+                                <div class="tooltip-container">
+                                    <span class="tooltip-icon">!</span>
+                                    <div class="tooltip-text">令和8年1月1日～12月31日の間の収入を記載してください。<br>※例：公的年金、事業所得、退職金など</div>
+                                </div>
+                            </div>
+                            <div class="radio-group">
+                               <label><input type="radio" name="spouse_other_income_existence" value="あり" onchange="toggleSection(this.value === 'あり', 'spouse-other-income-details')">あり</label>
+                               <label><input type="radio" name="spouse_other_income_existence" value="なし" onchange="toggleSection(this.value === 'あり', 'spouse-other-income-details')" checked>なし</label>
+                            </div>
+                        </div>
+                        
+                        <div id="spouse-other-income-details" class="form-group hidden">
+                            <div class="form-group form-group-small">
+                                <label>年金収入金額</label>
+                                <div class="yen-input-wrapper"><input type="text" name="spouse_pension_income" class="currency-input" inputmode="numeric"></div>
+                            </div>
+                            <div class="form-group form-group-small">
+                                <label>事業収入金額</label>
+                                <div class="yen-input-wrapper"><input type="text" name="spouse_business_income" class="currency-input" inputmode="numeric"></div>
+                            </div>
+                            <div class="form-group form-group-small">
+                                <label>退職手当等収入金額</label>
+                                <div class="yen-input-wrapper"><input type="text" name="spouse_severance_pay_income" class="currency-input" inputmode="numeric"></div>
+                            </div>
+                            <div class="form-group form-group-small">
+                                <label>その他収入金額</label>
+                                <div class="yen-input-wrapper"><input type="text" name="spouse_misc_income" class="currency-input" inputmode="numeric"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group"><label>障害者手帳交付有無</label><div class="radio-group"><label><input type="radio" name="spouse_disability_certificate_existence" value="あり" onchange="toggleSection(this.value === 'あり', 'spouse-disability-file-group')"> あり</label><label><input type="radio" name="spouse_disability_certificate_existence" value="なし" onchange="toggleSection(this.value === 'あり', 'spouse-disability-file-group')" checked> なし</label></div></div>
+                        <div id="spouse-disability-file-group" class="form-group hidden">
+                            <label>障害者手帳</label>
+                            <input type="file" name="spouse_disability_certificate_file" multiple>
+                            <textarea style="margin-top: 15px;" name="spouse_disability_certificate_remarks" rows="3" placeholder="添付が難しい場合はこちらに「交付年月日、手帳の種類、等級」をご記入ください"></textarea>
+                        </div>
+                    </div>
+                </fieldset>
+                
+                <fieldset>
+                    <div class="fieldset-title">扶養親族情報</div>
+                    <div class="form-group"><label>扶養親族有無</label><div class="radio-group"><label><input type="radio" name="dependents_existence" value="あり" onchange="toggleSection(this.value === 'あり', 'dependents-section')"> あり</label><label><input type="radio" name="dependents_existence" value="なし" onchange="toggleSection(this.value === 'あり', 'dependents-section')" checked> なし</label></div></div>
+                    <div id="dependents-section" class="hidden">
+                        ${[...Array(MAX_DEPENDENTS)].map((_, i) => `
+                            <fieldset id="dependent-group-${i + 1}" class="${i > 0 ? 'hidden' : ''}">
+                                <div class="fieldset-title">
+                                    <span>扶養親族 ${i + 1}</span>
+                                    ${i > 0 ? `<button type="button" class="btn-remove" onclick="removeDependentField(${i + 1})">この親族を削除</button>` : ''}
+                                </div>
+                                <div class="form-row">
+                                    <div><label>姓</label><input type="text" id="dependent_${i + 1}_name_last" name="dependent_${i + 1}_last_name"></div>
+                                    <div><label>名</label><input type="text" id="dependent_${i + 1}_name_first" name="dependent_${i + 1}_first_name"></div>
+                                </div>
+                                <div class="form-row">
+                                    <div><label>姓フリガナ</label><input type="text" id="dependent_${i + 1}_kana_last" name="dependent_${i + 1}_last_name_furigana" pattern="[ァ-ヶー]+" title="全角カタカナで入力してください"></div>
+                                    <div><label>名フリガナ</label><input type="text" id="dependent_${i + 1}_kana_first" name="dependent_${i + 1}_first_name_furigana" pattern="[ァ-ヶー]+" title="全角カタカナで入力してください"></div>
+                                </div>
+                                <div class="form-group form-group-ssmall">
+                                    <label>続柄</label>
+                                    <select name="dependent_${i + 1}_relationship">
+                                        <option value=""></option>
+                                        <option value="息子">息子</option><option value="娘">娘</option><option value="実父">実父</option><option value="実母">実母</option><option value="義父">義父</option>
+                                        <option value="義母">義母</option><option value="祖父">祖父</option><option value="祖母">祖母</option>
+                                        <option value="孫">孫</option><option value="兄">兄</option><option value="姉">姉</option>
+                                        <option value="弟">弟</option><option value="妹">妹</option><option value="叔父">叔父</option><option value="叔母">叔母</option><option value="甥">甥</option><option value="姪">姪</option><option value="その他">その他</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>生年月日</label>
+                                    <div class="date-select-group" data-prefix="dependent_${i + 1}">
+                                        <div class="date-row">
+                                            <select class="era"><option value="">元号</option></select>
+                                            <select class="year"><option value="">年</option></select><span>年</span>
+                                        </div>
+                                        <div class="date-row">
+                                            <select class="month"><option value="">月</option></select><span>月</span>
+                                            <select class="day"><option value="">日</option></select><span>日</span>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="dependent_${i + 1}_birth_date">
+                                </div>
+                                <div class="form-group checkbox-group"><label><input type="checkbox" onchange="syncAddress('dependent_${i + 1}', this)"> 本人と住所が同じ</label></div>
+                                <input type="hidden" name="dependent_${i + 1}_address_same_as_user" value="false">
+                                <div class="form-group form-group-large"><label>住所1</label><input type="text" id="dependent_${i + 1}_address1" name="dependent_${i + 1}_address1"></div>
+                                <div class="form-group form-group-large"><label>住所2</label><input type="text" id="dependent_${i + 1}_address2" name="dependent_${i + 1}_address2"></div>
+                                <div class="form-group form-group-small">
+                                    <div class="tooltip-wrapper"><label>給与収入金額</label>
+                                        <div class="tooltip-container">
+                                            <span class="tooltip-icon">!</span>
+                                            <div class="tooltip-text">令和8年(2026年)中の収入を記載してください。<br>総支給額から非課税交通費を除いた金額です。</div>
+                                        </div>
+                                    </div>
+                                    <div class="yen-input-wrapper"><input type="text" name="dependent_${i + 1}_salary_income" class="currency-input" inputmode="numeric" required></div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <div class="tooltip-wrapper">
+                                        <label>その他収入有無（退職手当等を含む）</label>
+                                        <div class="tooltip-container">
+                                            <span class="tooltip-icon">!</span>
+                                            <div class="tooltip-text">令和8年1月1日～12月31日の間の収入を記載してください。<br>※例：公的年金、事業所得、退職金など</div>
+                                        </div>
+                                    </div>
+                                    <div class="radio-group">
+                                        <label><input type="radio" name="dependent_${i + 1}_other_income_existence" value="あり" onchange="toggleSection(this.value === 'あり', 'dependent-${i + 1}-other-income-details')">あり</label>
+                                        <label><input type="radio" name="dependent_${i + 1}_other_income_existence" value="なし" onchange="toggleSection(this.value === 'あり', 'dependent-${i + 1}-other-income-details')" checked>なし</label>
+                                    </div>
+                                </div>
+                                
+                                <div id="dependent-${i + 1}-other-income-details" class="form-group hidden">
+                                    <div class="form-group form-group-small">
+                                        <label>年金収入金額</label>
+                                        <div class="yen-input-wrapper"><input type="text" name="dependent_${i + 1}_pension_income" class="currency-input" inputmode="numeric"></div>
+                                    </div>
+                                    <div class="form-group form-group-small">
+                                        <label>事業収入金額</label>
+                                        <div class="yen-input-wrapper"><input type="text" name="dependent_${i + 1}_business_income" class="currency-input" inputmode="numeric"></div>
+                                    </div>
+                                    <div class="form-group form-group-small">
+                                        <label>退職手当等収入金額</label>
+                                        <div class="yen-input-wrapper"><input type="text" name="dependent_${i + 1}_severance_pay_income" class="currency-input" inputmode="numeric"></div>
+                                    </div>
+                                    <div class="form-group form-group-small">
+                                        <label>その他収入金額</label>
+                                        <div class="yen-input-wrapper"><input type="text" name="dependent_${i + 1}_misc_income" class="currency-input" inputmode="numeric"></div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group"><label>障害者手帳交付有無</label><div class="radio-group"><label><input type="radio" name="dependent_${i + 1}_disability_certificate_existence" value="あり" onchange="toggleSection(this.value === 'あり', 'dependent-${i + 1}-disability-file-group')"> あり</label><label><input type="radio" name="dependent_${i + 1}_disability_certificate_existence" value="なし" onchange="toggleSection(this.value === 'あり', 'dependent-${i + 1}-disability-file-group')" checked> なし</label></div></div>
+                                <div id="dependent-${i + 1}-disability-file-group" class="form-group hidden">
+                                    <label>障害者手帳</label>
+                                    <input type="file" name="dependent_${i + 1}_disability_certificate_file" multiple>
+                                    <textarea style="margin-top: 15px;" name="dependent_${i + 1}_disability_certificate_remarks" rows="3" placeholder="添付が難しい場合はこちらに「交付年月日、手帳の種類、等級」をご記入ください"></textarea>
+                                </div>
+                            </fieldset>
+                        `).join('')}
+                        <div class="btn-container"><button type="button" id="add-dependent-btn" onclick="addDependentField()">＋ 扶養親族を追加</button></div>
+                    </div>
+                </fieldset>
+                
+                <fieldset>
+                    <div class="fieldset-title">本人該当項目</div>
+                    <div class="form-group"><label>障害者手帳交付有無</label><div class="radio-group"><label><input type="radio" name="user_disability_certificate_existence" value="あり" onchange="toggleSection(this.value === 'あり', 'user-disability-file-group')"> あり</label><label><input type="radio" name="user_disability_certificate_existence" value="なし" onchange="toggleSection(this.value === 'あり', 'user-disability-file-group')" checked> なし</label></div></div>
+                    <div id="user-disability-file-group" class="form-group hidden">
+                        <label>障害者手帳</label>
+                        <input type="file" name="user_disability_certificate_file" multiple>
+                        <textarea style="margin-top: 15px;" name="user_disability_certificate_remarks" rows="3" placeholder="添付が難しい場合はこちらに「交付年月日、手帳の種類、等級」をご記入ください"></textarea>
+                    </div>
+                    <div class="form-group"><div class="tooltip-wrapper"><label>寡婦該当確認</label>
+                    	<div class="tooltip-container">
+                            	<span class="tooltip-icon">!</span>
+                                <div class="tooltip-text">ひとり親に該当しない女性で、下記のいずれかに該当する場合は該当を選択してください。<br>・夫と離婚後に再婚しておらず、子以外の扶養親族がいる場合<br>・夫と死別後に再婚していない場合</div>
+                            </div></div>
+                    	<div class="radio-group"><label><input type="radio" name="widow_status" value="該当">該当</label><label><input type="radio" name="widow_status" value="非該当" checked>非該当</label></div></div>
+                    <div class="form-group"><div class="tooltip-wrapper"><label>ひとり親該当確認</label>
+                    	<div class="tooltip-container">
+                            	<span class="tooltip-icon">!</span>
+                                <div class="tooltip-text">現在、事実婚を含む婚姻されていない方で、生計を一にする子がいる場合は該当を選択してください。</div>
+                            </div></div>
+                    	<div class="radio-group"><label><input type="radio" name="single_parent_status" value="該当">該当</label><label><input type="radio" name="single_parent_status" value="非該当" checked>非該当</label></div></div>
+                    <div class="form-group"><div class="tooltip-wrapper"><label>勤労学生該当確認</label>
+                    	<div class="tooltip-container">
+                            	<span class="tooltip-icon">!</span>
+                                <div class="tooltip-text">学生の方で令和8年(2026年)中の収入金額が130万円以下の場合は該当を選択し、学生証をアップロードしてください。</div>
+                            </div></div>
+                    	<div class="radio-group"><label><input type="radio" name="working_student_status" value="該当" onchange="toggleSection(this.value === '該当', 'student-card-group')">該当</label><label><input type="radio" name="working_student_status" value="非該当" onchange="toggleSection(this.value === '該当', 'student-card-group')" checked>非該当</label></div></div>
+                    <div id="student-card-group" class="form-group hidden"><label>勤労学生_学生証</label><input type="file" name="student_card_file"></div>
+                    <div class="form-group"><div class="tooltip-wrapper"><label>災害者該当確認</label>
+                    	<div class="tooltip-container">
+                            	<span class="tooltip-icon">!</span>
+                                <div class="tooltip-text">災害によって住宅や家財に損害を受けた方で、下記3つを満たす場合は該当を選択してください。<br>①災害のあった年分の所得金額が1,000万円以下<br>②災害によって受けた損害額が住宅または家財の1/2の価値<br>③雑損控除の適用をうけない</div>
+                            </div></div>
+                    	<div class="radio-group"><label><input type="radio" name="disaster_status" value="該当">該当</label><label><input type="radio" name="disaster_status" value="非該当" checked>非該当</label></div></div>
+                    <div class="form-group">
+                        <div class="tooltip-wrapper">
+                            <label>国外居住扶養親族有無</label>
+                            <div class="tooltip-container">
+                                <span class="tooltip-icon">!</span>
+                                <div class="tooltip-text">国外居住親族とは、国内に住所を有せず、かつ、現在まで引き続いて1年以上国内に居所を有しない親族をいいます。</div>
+                            </div>
+                        </div>
+                        <div class="radio-group">
+                            <label><input type="radio" name="non_resident_dependent_status" value="該当" onchange="toggleSection(this.value === '該当', 'non-resident-file-group')">該当</label>
+                            <label><input type="radio" name="non_resident_dependent_status" value="非該当" onchange="toggleSection(this.value === '該当', 'non-resident-file-group')" checked>非該当</label>
+                        </div>
+                    </div>
+                    <div id="non-resident-file-group" class="form-group hidden">
+                        <div style="margin-bottom: 15px;">
+                            <label>国外居住扶養親族_親族関係書類</label>
+                            <input type="file" name="non_resident_dependent_relation_file" multiple>
+                            <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※国外居住扶養親族が留学している場合は、こちらに留学ビザ等の書類もアップロードしてください。</p>
+                        </div>
+                        <div>
+                            <label>国外居住扶養親族_送金関係書類</label>
+                            <input type="file" name="non_resident_dependent_remittance_file" multiple>
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <div class="fieldset-title">各種控除</div>
+                    <div class="form-group"><label>生命保険料控除有無</label><div class="radio-group"><label><input type="radio" name="life_insurance_deduction" value="あり" onchange="toggleSection(this.value === 'あり', 'life-insurance-group')">あり</label><label><input type="radio" name="life_insurance_deduction" value="なし" onchange="toggleSection(this.value === 'あり', 'life-insurance-group')" checked>なし</label></div></div>
+                    <div id="life-insurance-group" class="form-group hidden"><label>生命保険料_控除証明書</label><input type="file" name="life_insurance_file" multiple>
+                    	<p style="font-size: 0.8em; color: #555; margin-top: 5px;">※複数ある場合は、すべてアップロードしてください。</p></div>
+                    <div class="form-group"><label>地震保険料控除有無</label><div class="radio-group"><label><input type="radio" name="earthquake_insurance_deduction" value="あり" onchange="toggleSection(this.value === 'あり', 'earthquake-insurance-group')">あり</label><label><input type="radio" name="earthquake_insurance_deduction" value="なし" onchange="toggleSection(this.value === 'あり', 'earthquake-insurance-group')" checked>なし</label></div></div>
+                    <div id="earthquake-insurance-group" class="form-group hidden"><label>地震保険料_控除証明書</label><input type="file" name="earthquake_insurance_file" multiple>
+                    	<p style="font-size: 0.8em; color: #555; margin-top: 5px;">※複数ある場合は、すべてアップロードしてください。</p></div>
+                    <div class="form-group"><div class="tooltip-wrapper"><label>社会保険料控除有無</label>
+                    	<div class="tooltip-container">
+                                <span class="tooltip-icon">!</span>
+                                <div class="tooltip-text">ご自身でお支払いされた国民健康保険料、国民年金保険料が対象です。<br>給与から控除されている健康保険料や厚生年金は含みません。</div>
+                            </div>
+                        </div>
+                    	<div class="radio-group"><label><input type="radio" name="social_insurance_deduction" value="あり" onchange="toggleSection(this.value === 'あり', 'social-insurance-group')">あり</label><label><input type="radio" name="social_insurance_deduction" value="なし" onchange="toggleSection(this.value === 'あり', 'social-insurance-group')" checked>なし</label></div></div>
+                    <div id="social-insurance-group" class="hidden" style="border: 1px solid #eee; padding: 15px; border-radius: 5px;">
+                        <div class="form-group">
+                            <label style="font-size: 1.1em; color: #333;">国民健康保険料</label>
+                            <p style="font-size: 0.8em; color: #555; margin-top: 5px;">年間支払額を入力するか、領収書または証明書をアップロードしてください。</p>
+                            <div class="form-group form-group-medium" style="margin-top: 15px;">
+                                <label>国民健康保険料を支払うことになっている人の氏名</label>
+                                <input type="text" name="national_health_insurance_payer_name">
+                            </div>
+                            <div class="form-group form-group-small" style="margin-top: 15px;">
+                                <label>年間支払額</label>
+                                <p style="font-size: 0.8em; color: #555; margin-top: 5px;">令和8年1月1日～12月31日の支払額を入力してください。</p>
+                                <div class="yen-input-wrapper">
+                                    <input type="text" name="national_health_insurance_amount" class="currency-input" inputmode="numeric">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>領収書または証明書</label>
+                                <input type="file" name="national_health_insurance_file" multiple>
+                            </div>
+                        </div>
+                        <hr style="border: none; border-top: 1px dashed #ddd; margin: 25px 0;">
+                        <div class="form-group">
+                            <label style="font-size: 1.1em; color: #333;">国民年金保険料</label>
+                            <p style="font-size: 0.8em; color: #555; margin-top: 5px;">控除証明書をアップロードしてください。</p>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label>控除証明書</label>
+                                <input type="file" name="national_pension_insurance_file" multiple>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group"> <div class="tooltip-wrapper"><label>小規模企業共済掛金等控除有無</label>
+                    	<div class="tooltip-container">
+                                <span class="tooltip-icon">!</span>
+                                <div class="tooltip-text">・中小企業基盤整備機構の共済契約の掛金<br>・企業型年金加入者掛金<br>・個人型年金加入者掛金<br>・心身障害者扶養共済制度に関する契約の掛金</div>
+                            </div>
+                        </div>
+                    	<div class="radio-group"><label><input type="radio" name="small_business_deduction" value="あり" onchange="toggleSection(this.value === 'あり', 'small-business-group')">あり</label><label><input type="radio" name="small_business_deduction" value="なし" onchange="toggleSection(this.value === 'あり', 'small-business-group')" checked>なし</label></div></div>
+                    <div id="small-business-group" class="form-group hidden"><label>小規模企業共済掛金等_控除証明書</label><input type="file" name="small_business_file" multiple>
+                    	<p style="font-size: 0.8em; color: #555; margin-top: 5px;">※複数ある場合は、すべてアップロードしてください。</p></div>
+                    <div class="form-group"><label>住宅ローン控除有無</label><div class="radio-group"><label><input type="radio" name="housing_loan_deduction" value="あり" onchange="toggleSection(this.value === 'あり', 'housing-loan-group')">あり</label><label><input type="radio" name="housing_loan_deduction" value="なし" onchange="toggleSection(this.value === 'あり', 'housing-loan-group')" checked>なし</label></div></div>
+                    <div id="housing-loan-group" class="form-group hidden">
+                        <div style="margin-bottom: 15px;">
+                            <label>住宅ローン_申告書</label>
+                            <input type="file" name="housing_loan_declaration_file" multiple>
+                            <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※令和8年分の「給与所得者の(特定増改築等)住宅借入金等特別控除申告書」をアップロードしてください。</p>
+                        </div>
+                        <div>
+                            <label>住宅ローン_証明書</label>
+                            <input type="file" name="housing_loan_certificate_file" multiple>
+                            <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※「住宅取得資金に係る借入金の年末残高等証明書」をアップロードしてください。複数ある場合はすべてアップロードしてください。</p>
+                        </div>
+                    </div>
+                </fieldset>
+            `;
+        }
+
+        function formatPostalCode(inputName) {
+            const inputElement = form.querySelector(`[name="${inputName}"]`);
+            if (inputElement && inputElement.value) {
+                let value = inputElement.value.replace(/-/g, '');
+                if (value.length === 7 && /^\d+$/.test(value)) {
+                    inputElement.value = value.slice(0, 3) + '-' + value.slice(3);
+                }
+            }
+        }
+        
+        function showConfirm() {
+            formatPostalCode('postal_code');
+            
+            document.querySelectorAll('.date-select-group').forEach(group => {
+                const prefix = group.dataset.prefix;
+                const era = group.querySelector('.era').value;
+                const year = group.querySelector('.year option:checked').textContent;
+                const month = group.querySelector('.month').value;
+                const day = group.querySelector('.day').value;
+                const hiddenInputName = prefix === 'user' ? 'birth_date' : `${prefix}_birth_date`;
+                const hiddenInput = form.querySelector(`input[name="${hiddenInputName}"]`);
+                if (era && year && month && day && hiddenInput) {
+                    hiddenInput.value = `${era}${year}年${month}月${day}日`;
+                } else if (hiddenInput) {
+                    hiddenInput.value = '';
+                }
+            });
+
+            form.querySelectorAll('.currency-input').forEach(input => {
+                input.value = input.value.replace(/,/g, '');
+            });
+
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                form.querySelectorAll('.currency-input').forEach(input => {
+                    if(input.value) input.value = Number(input.value).toLocaleString('ja-JP');
+                });
+                return;
+            }
+            
+            const isEditing = !!document.getElementById('edit-id').value;
+            let confirmHtml = `
+                <div style="text-align:center;">
+                    <img src="./logo-color-2.jpg" alt="スタートアップ税理士法人 Logo" style="max-width: 180px; margin-bottom: 20px;">
+                </div>
+                <h2>入力内容の確認</h2>
+                <p style="text-align:center; color: #555;">以下の内容で送信します。よろしいですか？</p>
+                <table id="confirm-table"></table>
+                <div class="btn-container">
+                    <button id="confirm-back-btn" type="button" onclick="goBack()">修正する</button>
+                    <button id="submit-btn" type="button" onclick="submitForm()">${isEditing ? '更新する' : '送信する'}</button>
+                </div>`;
+            confirmContents.innerHTML = confirmHtml;
+
+            const table = document.getElementById('confirm-table');
+            
+            // 一時的にdisabledを解除
+            const disabledElements = Array.from(form.querySelectorAll('[disabled]'));
+            disabledElements.forEach(el => el.disabled = false);
+
+            const readOnlyElements = Array.from(form.querySelectorAll('[readonly]'));
+            readOnlyElements.forEach(el => el.readOnly = false);
+            
+            const formData = new FormData(form);
+            
+            // disabledとreadonlyを元に戻す
+            readOnlyElements.forEach(el => el.readOnly = true);
+            disabledElements.forEach(el => el.disabled = true);
+
+            const getDisplayValue = (name) => {
+                const input = form.querySelector(`[name="${name}"]`);
+                if (!input || input.closest('.hidden')) {
+                    if (name === 'company_name') {
+                        return formData.get('company_name'); // hidden inputから取得
+                    }
+                    return null;
+                }
+
+                if (input.type === 'file') {
+                    let existingFileNames = [];
+                    const currentFilesDiv = input.nextElementSibling;
+                    if (currentFilesDiv && currentFilesDiv.classList.contains('current-files')) {
+                        const links = currentFilesDiv.querySelectorAll('a');
+                        if (links.length > 0) {
+                            existingFileNames = Array.from(links).map(a => a.textContent);
+                        }
+                    }
+
+                    const newFileNames = (input.files.length > 0) 
+                        ? Array.from(input.files).map(f => f.name) 
+                        : [];
+
+                    const allFileNames = [...existingFileNames, ...newFileNames];
+                    
+                    return allFileNames.length > 0 ? allFileNames.join(', ') : null;
+                }
+                
+                let value = formData.get(name);
+                if (value === null || value === undefined || value === '' || value === 'false') {
+                    return null;
+                }
+
+                if (input.classList.contains('currency-input')) {
+                    return Number(String(value).replace(/,/g, '')).toLocaleString('ja-JP') + ' 円';
+                }
+                return value;
+            };
+
+            const addRow = (label, value) => {
+                const row = table.insertRow();
+                row.insertCell().outerHTML = `<th>${label}</th>`;
+                row.insertCell().textContent = value;
+            };
+
+            const allFields = [
+                ['company_name', '事業者名'], ['email_address', 'メールアドレス'], ['last_name', '姓'], ['first_name', '名'],
+                ['last_name_furigana', '姓フリガナ'], ['first_name_furigana', '名フリガナ'], ['birth_date', '生年月日'],
+                ['postal_code', '郵便番号'], ['address1', '住所1'], ['address2', '住所2'], 
+                ['householder_name', '世帯主の氏名'], ['householder_relationship', '世帯主の続柄'],
+                ['year_end_adjustment', '年末調整実施可否'],
+                ['previous_job', '前職有無'], ['previous_job_file', '前職源泉徴収票'], 
+                ['other_income_existence', 'その他収入有無'], ['user_pension_income', '本人 年金収入'], ['user_business_income', '本人 事業収入'], ['user_severance_pay_income', '本人 退職手当等収入'], ['user_misc_income', '本人 その他収入'],
+                ['resident_tax', '住民税徴収方法'], ['spouse_existence', '配偶者有無'], 
+                ['spouse_last_name', '配偶者 姓'], ['spouse_first_name', '配偶者 名'],
+                ['spouse_last_name_furigana', '配偶者 姓フリガナ'], ['spouse_first_name_furigana', '配偶者 名フリガナ'],
+                ['spouse_birth_date', '配偶者 生年月日'], 
+                ['spouse_address_same_as_user', '配偶者住所'],
+                ['spouse_address1', '配偶者 住所1'], ['spouse_address2', '配偶者 住所2'],
+                ['spouse_salary_income', '配偶者 給与収入金額'], 
+                ['spouse_other_income_existence', '配偶者 その他収入有無'],
+                ['spouse_pension_income', '配偶者 年金収入'],
+                ['spouse_business_income', '配偶者 事業収入'],
+                ['spouse_severance_pay_income', '配偶者 退職手当等収入'],
+                ['spouse_misc_income', '配偶者 その他収入'],
+                ['spouse_disability_certificate_existence', '配偶者 障害者手帳交付有無'],
+                ['spouse_disability_certificate_file', '配偶者 障害者手帳'],
+                ['spouse_disability_certificate_remarks', '配偶者 障害者手帳(備考)'],
+                ['dependents_existence', '扶養親族有無'],
+            ];
+
+            for (let i = 1; i <= MAX_DEPENDENTS; i++) {
+                allFields.push(
+                    [`dependent_${i}_last_name`, `【扶養親族${i}】姓`], [`dependent_${i}_first_name`, `【扶養親族${i}】名`],
+                    [`dependent_${i}_last_name_furigana`, `【扶養親族${i}】姓フリガナ`], [`dependent_${i}_first_name_furigana`, `【扶養親族${i}】名フリガナ`],
+                    [`dependent_${i}_relationship`, `【扶養親族${i}】続柄`], [`dependent_${i}_birth_date`, `【扶養親族${i}】生年月日`],
+                    [`dependent_${i}_address_same_as_user`, `【扶養親族${i}】住所`],
+                    [`dependent_${i}_address1`, `【扶養親族${i}】住所1`], [`dependent_${i}_address2`, `【扶養親族${i}】住所2`],
+                    [`dependent_${i}_salary_income`, `【扶養親族${i}】給与収入金額`],
+                    [`dependent_${i}_other_income_existence`, `【扶養親族${i}】その他収入有無`],
+                    [`dependent_${i}_pension_income`, `【扶養親族${i}】年金収入`],
+                    [`dependent_${i}_business_income`, `【扶養親族${i}】事業収入`],
+                    [`dependent_${i}_severance_pay_income`, `【扶養親族${i}】退職手当等収入`],
+                    [`dependent_${i}_misc_income`, `【扶養親族${i}】その他収入`],
+                    [`dependent_${i}_disability_certificate_existence`, `【扶養親族${i}】障害者手帳交付有無`],
+                    [`dependent_${i}_disability_certificate_file`, `【扶養親族${i}】障害者手帳`],
+                    [`dependent_${i}_disability_certificate_remarks`, `【扶養親族${i}】障害者手帳(備考)`]
+                );
+            }
+            allFields.push(
+                ['user_disability_certificate_existence', '本人 障害者手帳交付有無'],
+                ['user_disability_certificate_file', '本人 障害者手帳'],
+                ['user_disability_certificate_remarks', '本人 障害者手帳(備考)'],
+                ['widow_status', '寡婦該当確認'], ['single_parent_status', 'ひとり親該当確認'],
+                ['working_student_status', '勤労学生該当確認'], ['student_card_file', '勤労学生_学生証'],
+                ['disaster_status', '災害者該当確認'],
+                ['non_resident_dependent_status', '国外居住扶養親族有無'], 
+                ['non_resident_dependent_relation_file', '国外居住扶養親族_親族関係書類'],
+                ['non_resident_dependent_remittance_file', '国外居住扶養親族_送金関係書類'],
+                ['life_insurance_deduction', '生命保険料控除有無'], ['life_insurance_file', '生命保険料_控除証明書'],
+                ['earthquake_insurance_deduction', '地震保険料控除有無'], ['earthquake_insurance_file', '地震保険料_控除証明書'],
+                ['social_insurance_deduction', '社会保険料控除有無'],
+                ['national_health_insurance_payer_name', '国民健康保険料 支払対象者氏名'],
+                ['national_health_insurance_amount', '国民健康保険料 年間支払額'],
+                ['national_health_insurance_file', '国民健康保険料 控除証明書'],
+                ['national_pension_insurance_file', '国民年金保険料 控除証明書'],
+                ['small_business_deduction', '小規模企業共済掛金等控除有無'], ['small_business_file', '小規模企業共済掛金等_控除証明書'],
+                ['housing_loan_deduction', '住宅ローン控除有無'], 
+                ['housing_loan_declaration_file', '住宅ローン_申告書'],
+                ['housing_loan_certificate_file', '住宅ローン_証明書']
+            );
+
+            allFields.forEach(([name, label]) => {
+                let value = getDisplayValue(name);
+                
+                if (name.includes('_address_same_as_user') && value === 'true') {
+                    const userAddress1 = getDisplayValue('address1');
+                    const userAddress2 = getDisplayValue('address2');
+                    value = `${userAddress1 || ''}${userAddress2 || ''}`.trim();
+                    label = label.replace(/【.*?】/, '').trim();
+                }
+                
+                if (value !== null) {
+                    if ( (name.endsWith('_address1') || name.endsWith('_address2')) &&
+                         getDisplayValue(`${name.substring(0, name.lastIndexOf('_'))}_address_same_as_user`) === 'true' ) {
+                        // 何もしない
+                    } else {
+                        addRow(label, value);
+                    }
+                }
+            });
+
+            formContents.classList.add('hidden');
+            confirmContents.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function goBack() {
+            form.querySelectorAll('.currency-input').forEach(input => {
+                if(input.value) input.value = Number(input.value.replace(/,/g, '')).toLocaleString('ja-JP');
+            });
+            confirmContents.classList.add('hidden');
+            formContents.classList.remove('hidden');
+        }
+
+        async function submitForm() {
+            confirmContents.classList.add('hidden');
+            loading.classList.remove('hidden');
+            
+            form.querySelectorAll('.currency-input').forEach(input => {
+                input.value = input.value.replace(/,/g, '');
+            });
+
+            const fileToBase64 = (file) => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve({ name: file.name, mimeType: file.type, base64: reader.result.split(',')[1] });
+                reader.onerror = error => reject(error);
+            });
+
+            // 一時的にdisabledを解除
+            const disabledElements = Array.from(form.querySelectorAll('[disabled]'));
+            disabledElements.forEach(el => el.disabled = false);
+
+            const readOnlyElements = Array.from(form.querySelectorAll('[readonly]'));
+            readOnlyElements.forEach(el => el.readOnly = false);
+
+            const formData = new FormData(form);
+
+            // disabledとreadonlyを元に戻す
+            readOnlyElements.forEach(el => el.readOnly = true);
+            disabledElements.forEach(el => el.disabled = true);
+
+            const dataObject = {};
+            for (const [key, value] of formData.entries()) {
+                 dataObject[key] = value;
+            }
+            
+            const fileInputs = form.querySelectorAll('input[type="file"]');
+            const filePromises = [];
+
+            fileInputs.forEach(input => {
+                if (input.files.length > 0 && !input.disabled) {
+                    const fieldName = input.name;
+                    dataObject[fieldName] = [];
+                    for (const file of input.files) {
+                        filePromises.push( fileToBase64(file).then(fileData => { dataObject[fieldName].push(fileData); }) );
+                    }
+                }
+            });
+            
+            await Promise.all(filePromises);
+
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    redirect: 'follow',
+                    body: JSON.stringify({postData: dataObject,secret: MY_SECRET_KEY})
+                });
+                
+                const result = await response.json();
+                
+                loading.classList.add('hidden');
+                if (result.result === 'success') {
+                    const completeMessageDiv = document.getElementById('complete-message-content');
+                    completeMessageDiv.innerHTML = `
+                        <h2>ご回答ありがとうございました</h2>
+                        <p>${dataObject.editId ? '更新' : '送信'}が完了いたしました。</p>
+                        <div class="answer-id-box">
+                            <p>お問い合わせの際には、以下の回答IDをお知らせください。</p>
+                            <div class="id-code">${result.submissionId}</div>
+                        </div>
+                        <p class="privacy-notice">
+                            お預かりした個人情報は、年末調整の目的にのみ利用し、<br>個人情報保護法および当法人のプライバシーポリシーに基づき、厳重に管理いたします。
+                        </p>
+                        <div class="complete-logo-wrapper">
+                            <img src="./logo-color-2.jpg" alt="スタートアップ税理士法人 Logo" class="complete-logo">
+                        </div>
+                    `;
+                    complete.classList.remove('hidden');
+                } else {
+                    alert(`送信に失敗しました: ${result.message}`);
+                    goBack();
+                }
+            } catch (error) {
+                loading.classList.add('hidden');
+                alert(`送信中にエラーが発生しました: ${error}`);
+                goBack();
+            }
+        }
+        
+        async function loadDataForEdit(id) {
+            try {
+                const response = await fetch(`${GAS_WEB_APP_URL}?id=${id}`);
+                const result = await response.json();
+                if (result.result === 'success') {
+                    populateForm(result.data);
+                } else {
+                    alert('データの読み込みに失敗しました: ' + result.message);
+                    window.location.search = '';
+                }
+            } catch (error) {
+                alert('データの読み込み中にエラーが発生しました。');
+                window.location.search = '';
+            }
+        }
+        
+        function populateForm(data) {
+        
+            document.querySelectorAll('.current-files').forEach(el => el.remove());
+            
+            let dependentCount = 0;
+            for (let i = 1; i <= 6; i++) {
+                if (data[`扶養親族${i}_姓`] || data[`扶養親族${i}_名`]) { dependentCount++; }
+            }
+            for (let i = 1; i < dependentCount; i++) { addDependentField(); }
+
+            const headers = Object.keys(data);
+            const nameAttrMap = {
+                '事業者名':'company_name', 'メールアドレス':'email_address', '姓':'last_name', '名':'first_name', '姓フリガナ':'last_name_furigana', '名フリガナ':'first_name_furigana',
+                '郵便番号':'postal_code', '住所1':'address1', '住所2':'address2', '世帯主の氏名':'householder_name', '世帯主の続柄':'householder_relationship',
+                '年末調整実施可否':'year_end_adjustment', '前職有無':'previous_job', 'その他収入有無':'other_income_existence', '本人年金収入':'user_pension_income', '本人事業収入':'user_business_income', '本人退職手当等収入':'user_severance_pay_income', '本人その他収入':'user_misc_income', '住民税徴収方法':'resident_tax',
+                '配偶者有無':'spouse_existence', '配偶者姓':'spouse_last_name', '配偶者名':'spouse_first_name', '配偶者姓フリガナ':'spouse_last_name_furigana', '配偶者名フリガナ':'spouse_first_name_furigana',
+                '配偶者住所1':'spouse_address1', '配偶者住所2':'spouse_address2', '配偶者_住所同じ':'spouse_address_same_as_user',
+                '配偶者_給与収入金額':'spouse_salary_income', 
+                '配偶者その他収入有無':'spouse_other_income_existence', '配偶者_年金収入金額':'spouse_pension_income', '配偶者_事業収入金額':'spouse_business_income', '配偶者_退職手当等収入金額':'spouse_severance_pay_income', '配偶者_その他収入金額(その他)':'spouse_misc_income',
+                '配偶者障害者手帳交付有無':'spouse_disability_certificate_existence', '配偶者障害者手帳備考':'spouse_disability_certificate_remarks',
+                '扶養親族有無':'dependents_existence', '本人障害者手帳交付有無':'user_disability_certificate_existence', '本人障害者手帳備考':'user_disability_certificate_remarks',
+                '寡婦該当確認':'widow_status', 'ひとり親該当確認':'single_parent_status', '勤労学生該当確認':'working_student_status', '災害者該当確認':'disaster_status',
+                '国外居住扶養親族有無':'non_resident_dependent_status', 
+                '国外居住扶養親族_親族関係書類':'non_resident_dependent_relation_file',
+                '国外居住扶養親族_送金関係書類':'non_resident_dependent_remittance_file',
+                '生命保険料控除有無':'life_insurance_deduction', '地震保険料控除有無':'earthquake_insurance_deduction', '社会保険料控除有無':'social_insurance_deduction',
+                '国民健康保険料 支払対象者氏名':'national_health_insurance_payer_name', '国民健康保険料 年間支払額':'national_health_insurance_amount',
+                '小規模企業共済掛金等控除有無':'small_business_deduction', 
+                '住宅ローン控除有無':'housing_loan_deduction',
+                '住宅ローン_申告書':'housing_loan_declaration_file',
+                '住宅ローン_証明書':'housing_loan_certificate_file'
+            };
+            for(let i=1; i<=6; i++){
+                nameAttrMap[`扶養親族${i}_姓`] = `dependent_${i}_last_name`; nameAttrMap[`扶養親族${i}_名`] = `dependent_${i}_first_name`;
+                nameAttrMap[`扶養親族${i}_姓フリガナ`] = `dependent_${i}_last_name_furigana`; nameAttrMap[`扶養親族${i}_名フリガナ`] = `dependent_${i}_first_name_furigana`;
+                nameAttrMap[`扶養親族${i}_続柄`] = `dependent_${i}_relationship`; nameAttrMap[`扶養親族${i}_住所1`] = `dependent_${i}_address1`; nameAttrMap[`扶養親族${i}_住所2`] = `dependent_${i}_address2`;
+                nameAttrMap[`扶養親族${i}_住所同じ`] = `dependent_${i}_address_same_as_user`;
+                nameAttrMap[`扶養親族${i}_給与収入金額`] = `dependent_${i}_salary_income`;
+                nameAttrMap[`扶養親族${i}_その他収入有無`] = `dependent_${i}_other_income_existence`;
+                nameAttrMap[`扶養親族${i}_年金収入金額`] = `dependent_${i}_pension_income`;
+                nameAttrMap[`扶養親族${i}_事業収入金額`] = `dependent_${i}_business_income`;
+                nameAttrMap[`扶養親族${i}_退職手当等収入金額`] = `dependent_${i}_severance_pay_income`;
+                nameAttrMap[`扶養親族${i}_その他収入金額(その他)`] = `dependent_${i}_misc_income`;
+                nameAttrMap[`扶養親族${i}_障害者手帳交付有無`] = `dependent_${i}_disability_certificate_existence`; nameAttrMap[`扶養親族${i}_障害者手帳備考`] = `dependent_${i}_disability_certificate_remarks`;
+            }
+
+            headers.forEach(header => {
+                const name = nameAttrMap[header];
+                if (!name) return;
+                
+                if (name === 'company_name') {
+                    const fullCompanyName = data[header];
+                    document.getElementById('company_name_hidden').value = fullCompanyName;
+                    
+                    let displayName = fullCompanyName;
+                    const match = fullCompanyName.match(/【(.*?)】/);
+                    if (match && match[1]) {
+                        displayName = match[1];
+                    }
+                    document.getElementById('company_name_display').value = displayName;
+                    return; 
+                }
+                
+                const el = form.querySelector(`[name="${name}"]`);
+                if (el) {
+                    const value = data[header];
+                    if (el.type === 'radio') {
+                        const targetRadio = form.querySelector(`[name="${name}"][value="${value}"]`);
+                        if (targetRadio) {
+                            targetRadio.checked = true;
+                            targetRadio.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    } else if (el.type !== 'file') {
+                        el.value = value || '';
+                         if(el.classList.contains('currency-input') && value) {
+                            el.value = Number(value).toLocaleString('ja-JP');
+                        }
+                    }
+                }
+            });
+
+            const dateHeaders = {'生年月日':'user', '配偶者生年月日':'spouse'};
+            for(let i=1; i<=6; i++) { dateHeaders[`扶養親族${i}_生年月日`] = `dependent_${i}`; }
+            Object.keys(dateHeaders).forEach(header => {
+                const dateString = data[header];
+                if (dateString) {
+                    const match = dateString.match(/^(令和|平成|昭和)(元|\d+)年(\d+)月(\d+)日$/);
+                    if (match) {
+                        const [, era, yearText, month, day] = match;
+                        const year = yearText === '元' ? 1 : parseInt(yearText, 10);
+                        const group = document.querySelector(`.date-select-group[data-prefix="${dateHeaders[header]}"]`);
+                        if (group) {
+                            const eraSelect = group.querySelector('.era');
+                            eraSelect.value = era;
+                            eraSelect.dispatchEvent(new Event('change'));
+                            setTimeout(() => {
+                                group.querySelector('.year').value = year;
+                                group.querySelector('.month').value = month;
+                                group.querySelector('.day').value = day;
+                            }, 100);
+                        }
+                    }
+                }
+            });
+
+            ['spouse', ...Array.from({length: 6}, (_, i) => `dependent_${i + 1}`)].forEach(prefix => {
+                const headerName = (prefix === 'spouse' ? '配偶者' : `扶養親族${prefix.split('_')[1]}`) + '_住所同じ';
+                if (data[headerName] === 'true' || data[headerName] === true) {
+                    const checkbox = form.querySelector(`[onchange="syncAddress('${prefix}', this)"]`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+            });
+
+            const fileUrlMap = {
+                '前職源泉徴収票URL': 'previous_job_file',
+                '配偶者障害者手帳URL': 'spouse_disability_certificate_file',
+                '本人障害者手帳URL': 'user_disability_certificate_file',
+                '勤労学生_学生証URL': 'student_card_file',
+                '生命保険料_控除証明書URL': 'life_insurance_file',
+                '地震保険料_控除証明書URL': 'earthquake_insurance_file',
+                '国民健康保険料 控除証明書URL': 'national_health_insurance_file',
+                '国民年金保険料 控除証明書URL': 'national_pension_insurance_file',
+                '小規模企業共済掛金等_控除証明書URL': 'small_business_file',
+                '住宅ローン_申告書URL': 'housing_loan_declaration_file',
+                '住宅ローン_証明書URL': 'housing_loan_certificate_file',
+                '国外居住扶養親族_親族関係書類URL': 'non_resident_dependent_relation_file',
+                '国外居住扶養親族_送金関係書類URL': 'non_resident_dependent_remittance_file'
+            };
+            for (let i = 1; i <= 6; i++) {
+                fileUrlMap[`扶養親族${i}_障害者手帳URL`] = `dependent_${i}_disability_certificate_file`;
+            }
+
+            for (const header in fileUrlMap) {
+                const urls = data[header];
+                const inputName = fileUrlMap[header];
+                const fileInput = form.querySelector(`[name="${inputName}"]`);
+
+                if (urls && fileInput) {
+                    const namesHeader = header.replace('URL', 'FileName');
+                    const names = data[namesHeader] ? data[namesHeader].split('\n') : [];
+
+                    let html = '<div class="current-files"><strong>現在アップロード済みのファイル:</strong><br>';
+                    urls.split('\n').forEach((url, index) => {
+                        if (!url) return;
+                        const fileName = names[index] || 'ファイルを開く';
+                        html += `
+                            <div class="file-item">
+                                <a href="${url}" target="_blank" rel="noopener noreferrer">${fileName}</a>
+                                <button type="button" class="btn-delete-file" data-url="${url}">削除</button>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    fileInput.insertAdjacentHTML('afterend', html);
+                }
+            }
+        }
+        
+        $(function() {
+            formContents.classList.remove('hidden');
+            confirmContents.classList.add('hidden');
+            loading.classList.add('hidden');
+            complete.classList.add('hidden');
+            
+            populateMainSections();
+            
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const editId = params.get('editId');
+                const companyName = params.get('company');
+
+                if (editId) {
+                    const titleElement = document.getElementById('form-title');
+                    titleElement.innerHTML = '年末調整情報<br class="mobile-break">の修正';
+                    document.getElementById('main-submit-btn').textContent = '更新内容の確認へ';
+                    document.getElementById('edit-id').value = editId;
+                    setTimeout(() => loadDataForEdit(editId), 100);
+                }
+
+                if (companyName) {
+                    const hiddenInput = document.getElementById('company_name_hidden');
+                    const displayInput = document.getElementById('company_name_display');
+                    
+                    hiddenInput.value = companyName; // 隠しフィールドに元の名前をセット
+
+                    let displayName = companyName;
+                    const match = companyName.match(/【(.*?)】/);
+                    if (match && match[1]) {
+                        displayName = match[1]; // 【】の中身を抽出
+                    }
+                    displayInput.value = displayName; // 表示用フィールドにセット
+                }
+            } catch(e) { console.error("URLパラメータ処理エラー:", e); }
+            
+            document.querySelectorAll('.date-select-group').forEach(setupWarekiDateFields);
+            
+            // 初期のdisabled状態を確実に保証するため、ロード直後にcheckedのラジオボタンのchangeイベントを発火
+            document.querySelectorAll('input[type="radio"][onchange*="toggleSection"]:checked').forEach(radio => {
+                radio.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+            toggleMainSections(form.querySelector('input[name="year_end_adjustment"]:checked').value);
+            
+            const fieldsToKana = [
+                { id: 'name_last', kanaId: 'kana_last' }, { id: 'name_first', kanaId: 'kana_first' },
+                { id: 'spouse_name_last', kanaId: 'spouse_kana_last' }, { id: 'spouse_name_first', kanaId: 'spouse_kana_first' }
+            ];
+            for (let i = 1; i <= MAX_DEPENDENTS; i++) {
+                fieldsToKana.push({ id: `dependent_${i}_name_last`, kanaId: `dependent_${i}_kana_last` });
+                fieldsToKana.push({ id: `dependent_${i}_name_first`, kanaId: `dependent_${i}_kana_first` });
+            }
+            fieldsToKana.forEach(field => {
+                const nameInput = document.getElementById(field.id);
+                const kanaInput = document.getElementById(field.kanaId);
+                if (nameInput && kanaInput) {
+                    nameInput.addEventListener('input', () => {
+                        const inputValue = nameInput.value;
+                        if (inputValue === '') {
+                            kanaInput.value = '';
+                            return;
+                        }
+                        const kanaString = [...inputValue].filter(char => wanakana.isHiragana(char) || wanakana.isKatakana(char)).join('');
+                        if (kanaString) {
+                            kanaInput.value = wanakana.toKatakana(kanaString);
+                        }
+                    });
+                }
+            });
+            
+            form.addEventListener('input', (event) => { if (event.target.classList.contains('currency-input')) { formatCurrency(event); } });
+
+            form.addEventListener('compositionend', (event) => {
+                if (event.target.classList.contains('currency-input')) {
+                    formatCurrency(event);
+                }
+            });
+
+            form.addEventListener('click', function(event) {
+                if (event.target.classList.contains('btn-delete-file')) {
+                    event.preventDefault();
+                    const fileItem = event.target.closest('.file-item');
+                    const urlToDelete = event.target.dataset.url;
+
+                    let urlsToDeleteInput = form.querySelector('[name="urls_to_delete"]');
+                    if (!urlsToDeleteInput) {
+                        urlsToDeleteInput = document.createElement('input');
+                        urlsToDeleteInput.type = 'hidden';
+                        urlsToDeleteInput.name = 'urls_to_delete';
+                        form.appendChild(urlsToDeleteInput);
+                    }
+                    urlsToDeleteInput.value += (urlsToDeleteInput.value ? '\n' : '') + urlToDelete;
+
+                    fileItem.remove();
+                }
+            });
+
+            document.addEventListener('click', function(e) { if (e.target.classList.contains('tooltip-icon')) { const parent = e.target.parentElement; const wasActive = parent.classList.contains('show'); document.querySelectorAll('.tooltip-container.show').forEach(c => c.classList.remove('show')); if (!wasActive) { parent.classList.add('show'); } } else if (!e.target.closest('.tooltip-container')) { document.querySelectorAll('.tooltip-container.show').forEach(c => c.classList.remove('show')); } });
+        });
+    </script>
+</body>
+</html>
