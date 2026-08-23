@@ -307,7 +307,7 @@
     				<label>郵便番号</label>
     				<div class="tooltip-container">
     					<span class="tooltip-icon">!</span>
-    					<div class="tooltip-text">令和8年12月31日時点の住民票住所を記載してください</div>
+    					<div class="tooltip-text">令和9年1月1日時点の住民票住所を記載してください</div>
     				</div>
 				</div>
 					 <input type="text" name="postal_code" class="p-postal-code" placeholder="例: 1600022" required>
@@ -342,15 +342,45 @@
                 <div class="form-group">
                     <label>当社で年末調整をおこないますか？</label>
                     <div class="radio-group">
-                        <label><input type="radio" name="year_end_adjustment" value="はい" onchange="toggleMainSections(this.value)" checked> はい</label>
-                        <label><input type="radio" name="year_end_adjustment" value="他社でおこなう" onchange="toggleMainSections(this.value)"> 他社でおこなう</label>
-                        <label><input type="radio" name="year_end_adjustment" value="確定申告する" onchange="toggleMainSections(this.value)"> 確定申告する</label>
+                        <label><input type="radio" name="year_end_adjustment" value="はい" onchange="toggleYearEndAdjustment(this.value)" checked> はい</label>
+                        <label><input type="radio" name="year_end_adjustment" value="いいえ" onchange="toggleYearEndAdjustment(this.value)"> いいえ</label>
                     </div>
                      <p style="font-size: 0.8em; color: #555; margin-top: 5px;">
                         ※他社で給与収入がある場合は、原則、確定申告が必要となりますが、収入が多い勤務先で年末調整をおこなうことができます。<br>
                         ※確定申告をされる場合でも年末調整をおこなうことが可能です<br>
                         ※ただし、給与収入が2,000万円を超える方は年末調整対象外となり、確定申告が必要です。
                      </p>
+                </div>
+                
+                <div id="not-doing-reason-group" class="form-group hidden">
+                    <label>理由を選択してください</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="not_doing_reason" value="他社でおこなう" onchange="handleNotDoingReasonChange(this.value)"> 他社でおこなう</label>
+                        <label><input type="radio" name="not_doing_reason" value="確定申告する" onchange="handleNotDoingReasonChange(this.value)"> 確定申告する</label>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <div class="fieldset-title">住民税</div>
+                <div class="form-group form-group-small">
+                    <div class="tooltip-wrapper">
+                        <label>住民税徴収方法</label>
+                        <div class="tooltip-container">
+                            <span class="tooltip-icon">!</span>
+                            <div class="tooltip-text">
+                                特別徴収：毎月の給与から控除されて会社が納付する方法で、法律で原則として定められている方法です。<br>普通徴収：給与からの控除がされず、ご自身で年4回納付する方法です。
+                            </div>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.8em; color: #555; margin-top: 5px;">
+                        ※年末調整を当社でおこなう場合は、原則、特別徴収を選択してください。<br>
+                        ※他社で年末調整を行う場合は、当社では普通徴収となります。
+                    </p>
+                </div>
+                <div class="radio-group">
+                    <label><input type="radio" name="resident_tax" value="特別徴収" checked> 特別徴収</label>
+                    <label><input type="radio" name="resident_tax" value="普通徴収"> 普通徴収</label>
                 </div>
             </fieldset>
             
@@ -398,6 +428,7 @@
         const complete = document.getElementById('complete');
         const mainSectionsContainer = document.getElementById('main-sections');
         const MAX_DEPENDENTS = 6;
+        
         const warekiData = {
             '令和': { start: 2019, years: new Date().getFullYear() - 2019 + 1 },
             '平成': { start: 1989, years: 31 },
@@ -461,22 +492,49 @@
             }
         }
 
+        function toggleYearEndAdjustment(value) {
+            toggleMainSections(value);
+            
+            const showReason = value === 'いいえ';
+            const reasonGroup = document.getElementById('not-doing-reason-group');
+            if (reasonGroup) {
+                reasonGroup.classList.toggle('hidden', !showReason);
+                reasonGroup.querySelectorAll('input').forEach(input => {
+                    input.disabled = !showReason;
+                });
+            }
+            updateResidentTaxState();
+        }
+
         function toggleMainSections(value) {
             const show = value === 'はい';
             mainSectionsContainer.classList.toggle('hidden', !show);
-            mainSectionsContainer.querySelectorAll('input, select, button').forEach(input => {
+            mainSectionsContainer.querySelectorAll('input, select, button, textarea').forEach(input => {
                 input.disabled = !show;
             });
             if (!show) {
                 document.getElementById('submit-button-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
+        }
 
-            // 「他社でおこなう」の場合に「普通徴収」を選択
-            if (value === '他社でおこなう') {
+        function handleNotDoingReasonChange(value) {
+            updateResidentTaxState();
+        }
+        
+        function updateResidentTaxState() {
+            const isOtherCompany = document.querySelector('input[name="not_doing_reason"][value="他社でおこなう"]')?.checked;
+            const isYearEndAdjustmentNo = document.querySelector('input[name="year_end_adjustment"][value="いいえ"]').checked;
+
+            const residentTaxRadios = document.querySelectorAll('input[name="resident_tax"]');
+            
+            if (isYearEndAdjustmentNo && isOtherCompany) {
                 const normalTaxRadio = document.querySelector('input[name="resident_tax"][value="普通徴収"]');
                 if (normalTaxRadio) {
                     normalTaxRadio.checked = true;
                 }
+                residentTaxRadios.forEach(radio => radio.disabled = true);
+            } else {
+                residentTaxRadios.forEach(radio => radio.disabled = false);
             }
         }
         
@@ -579,25 +637,6 @@
                             <div class="yen-input-wrapper"><input type="text" name="user_misc_income" class="currency-input" inputmode="numeric"></div>
                             <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※所得金額は弊社で算出いたします。</p>
                         </div>
-                    </div>
-                </fieldset>
-                <fieldset>
-                    <div class="fieldset-title">住民税</div>
-                    <div class="form-group form-group-small">
-                        <div class="tooltip-wrapper">
-                            <label>住民税徴収方法</label>
-                            <div class="tooltip-container">
-                                <span class="tooltip-icon">!</span>
-                                <div class="tooltip-text">
-                                    特別徴収：毎月の給与から控除されて会社が納付する方法で、法律で原則として定められている方法です。<br>普通徴収：給与からの控除がされず、ご自身で年4回納付する方法です。
-                                </div>
-                            </div>
-                        </div>
-                    	<p style="font-size: 0.8em; color: #555; margin-top: 5px;">※年末調整を当社でおこなう場合は、原則、特別徴収を選択してください。</p>
-                    </div>
-                    <div class="radio-group">
-                        <label><input type="radio" name="resident_tax" value="特別徴収" checked> 特別徴収</label>
-                        <label><input type="radio" name="resident_tax" value="普通徴収"> 普通徴収</label>
                     </div>
                 </fieldset>
                 
@@ -812,10 +851,10 @@
                                 <div class="tooltip-text">現在、事実婚を含む婚姻されていない方で、生計を一にする子がいる場合は該当を選択してください。</div>
                             </div></div>
                     	<div class="radio-group"><label><input type="radio" name="single_parent_status" value="該当">該当</label><label><input type="radio" name="single_parent_status" value="非該当" checked>非該当</label></div></div>
-                    <div class="form-group"><div class="tooltip-wrapper"><label>勤労学生該当確認</label>
+                    <div class="form-group"><div class="tooltip-wrapper"><label>勤労学生該当確認＜本人限定＞</label>
                     	<div class="tooltip-container">
                             	<span class="tooltip-icon">!</span>
-                                <div class="tooltip-text">学生の方で令和8年(2026年)中の収入金額が130万円以下の場合は該当を選択し、学生証をアップロードしてください。</div>
+                                <div class="tooltip-text">ご自身が学生の場合で令和8年(2026年)中の収入金額が130万円以下の場合は該当を選択し、学生証をアップロードしてください。</div>
                             </div></div>
                     	<div class="radio-group"><label><input type="radio" name="working_student_status" value="該当" onchange="toggleSection(this.value === '該当', 'student-card-group')">該当</label><label><input type="radio" name="working_student_status" value="非該当" onchange="toggleSection(this.value === '該当', 'student-card-group')" checked>非該当</label></div></div>
                     <div id="student-card-group" class="form-group hidden"><label>勤労学生_学生証</label><input type="file" name="student_card_file"></div>
@@ -842,7 +881,17 @@
                         <div style="margin-bottom: 15px;">
                             <label>国外居住扶養親族_親族関係書類</label>
                             <input type="file" name="non_resident_dependent_relation_file" multiple>
-                            <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※国外居住扶養親族が留学している場合は、こちらに留学ビザ等の書類もアップロードしてください。</p>
+                            <p style="font-size: 0.8em; color: #555; margin-top: 5px;">
+                                日本の公的書類で証明する場合<br>
+                                ・戸籍の附票の写しその他国が発行した書類および国外居住親族のパスポートの写し<br>
+                                <br>
+                                国外の公的書類で証明する場合<br>
+                                ・外国政府等が発行した国外居住親族の氏名、生年月日及び住所等の記載のある書類<br>
+                                （※外国語で作成されている場合は日本語訳が必要です）<br>
+                                <br>
+                                ※国外居住扶養親族が留学している場合は、こちらに留学ビザ等の書類もアップロードしてください。<br>
+                                （※外国語で作成されている場合は日本語訳が必要です）
+                            </p>
                         </div>
                         <div>
                             <label>国外居住扶養親族_送金関係書類</label>
@@ -855,13 +904,13 @@
                     <div class="form-group"><label>生命保険料控除有無</label><div class="radio-group"><label><input type="radio" name="life_insurance_deduction" value="あり" onchange="toggleSection(this.value === 'あり', 'life-insurance-group')">あり</label><label><input type="radio" name="life_insurance_deduction" value="なし" onchange="toggleSection(this.value === 'あり', 'life-insurance-group')" checked>なし</label></div></div>
                     <div id="life-insurance-group" class="form-group hidden"><label>生命保険料_控除証明書</label><input type="file" name="life_insurance_file" multiple>
                     	<p style="font-size: 0.8em; color: #555; margin-top: 5px;">※複数ある場合は、すべてアップロードしてください。</p></div>
-                    <div class="form-group"><label>地震保険料控除有無</label><div class="radio-group"><label><input type="radio" name="earthquake_insurance_deduction" value="あり" onchange="toggleSection(this.value === 'あり', 'earthquake-insurance-group')">あり</label><label><input type="radio" name="earthquake_insurance_deduction" value="なし" onchange="toggleSection(this.value === 'あり', 'earthquake-insurance-group')" checked>なし</label></div></div>
+                    <div class="form-group"><div class="tooltip-wrapper"><label>地震保険料控除有無</label><div class="tooltip-container"><span class="tooltip-icon">!</span><div class="tooltip-text">平成18年12月31日までに契約している旧長期損害保険料も対象です。</div></div></div><div class="radio-group"><label><input type="radio" name="earthquake_insurance_deduction" value="あり" onchange="toggleSection(this.value === 'あり', 'earthquake-insurance-group')">あり</label><label><input type="radio" name="earthquake_insurance_deduction" value="なし" onchange="toggleSection(this.value === 'あり', 'earthquake-insurance-group')" checked>なし</label></div></div>
                     <div id="earthquake-insurance-group" class="form-group hidden"><label>地震保険料_控除証明書</label><input type="file" name="earthquake_insurance_file" multiple>
                     	<p style="font-size: 0.8em; color: #555; margin-top: 5px;">※複数ある場合は、すべてアップロードしてください。</p></div>
                     <div class="form-group"><div class="tooltip-wrapper"><label>社会保険料控除有無</label>
                     	<div class="tooltip-container">
                                 <span class="tooltip-icon">!</span>
-                                <div class="tooltip-text">ご自身でお支払いされた国民健康保険料、国民年金保険料が対象です。<br>給与から控除されている健康保険料や厚生年金は含みません。</div>
+                                <div class="tooltip-text">ご自身でお支払いされた国民健康保険料、国民年金保険料、任意継続の健康保険料が対象です。<br>給与から控除されている健康保険料や厚生年金は含みません。</div>
                             </div>
                         </div>
                     	<div class="radio-group"><label><input type="radio" name="social_insurance_deduction" value="あり" onchange="toggleSection(this.value === 'あり', 'social-insurance-group')">あり</label><label><input type="radio" name="social_insurance_deduction" value="なし" onchange="toggleSection(this.value === 'あり', 'social-insurance-group')" checked>なし</label></div></div>
@@ -894,6 +943,26 @@
                                 <input type="file" name="national_pension_insurance_file" multiple>
                             </div>
                         </div>
+                        <hr style="border: none; border-top: 1px dashed #ddd; margin: 25px 0;">
+                        <div class="form-group">
+                            <label style="font-size: 1.1em; color: #333;">任意継続の健康保険料</label>
+                            <p style="font-size: 0.8em; color: #555; margin-top: 5px;">年間支払額を入力するか、領収書または証明書をアップロードしてください。<br>※証明書は加入している健康保険組合によって、発行依頼が必要となる場合があります</p>
+                            <div class="form-group form-group-medium" style="margin-top: 15px;">
+                                <label>任意継続の健康保険料を支払うことになっている人の氏名</label>
+                                <input type="text" name="voluntary_health_insurance_payer_name">
+                            </div>
+                            <div class="form-group form-group-small" style="margin-top: 15px;">
+                                <label>年間支払額</label>
+                                <p style="font-size: 0.8em; color: #555; margin-top: 5px;">令和8年1月1日～12月31日の支払額を入力してください。</p>
+                                <div class="yen-input-wrapper">
+                                    <input type="text" name="voluntary_health_insurance_amount" class="currency-input" inputmode="numeric">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>領収書または証明書</label>
+                                <input type="file" name="voluntary_health_insurance_file" multiple>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group"> <div class="tooltip-wrapper"><label>小規模企業共済掛金等控除有無</label>
                     	<div class="tooltip-container">
@@ -904,17 +973,22 @@
                     	<div class="radio-group"><label><input type="radio" name="small_business_deduction" value="あり" onchange="toggleSection(this.value === 'あり', 'small-business-group')">あり</label><label><input type="radio" name="small_business_deduction" value="なし" onchange="toggleSection(this.value === 'あり', 'small-business-group')" checked>なし</label></div></div>
                     <div id="small-business-group" class="form-group hidden"><label>小規模企業共済掛金等_控除証明書</label><input type="file" name="small_business_file" multiple>
                     	<p style="font-size: 0.8em; color: #555; margin-top: 5px;">※複数ある場合は、すべてアップロードしてください。</p></div>
-                    <div class="form-group"><label>住宅ローン控除有無</label><div class="radio-group"><label><input type="radio" name="housing_loan_deduction" value="あり" onchange="toggleSection(this.value === 'あり', 'housing-loan-group')">あり</label><label><input type="radio" name="housing_loan_deduction" value="なし" onchange="toggleSection(this.value === 'あり', 'housing-loan-group')" checked>なし</label></div></div>
+                    
+                    <div class="form-group">
+                        <label>住宅ローン控除有無（2年目以降）</label>
+                        <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※初年度の場合は確定申告が必要です</p>
+                        <div class="radio-group"><label><input type="radio" name="housing_loan_deduction" value="あり" onchange="toggleSection(this.value === 'あり', 'housing-loan-group')">あり</label><label><input type="radio" name="housing_loan_deduction" value="なし" onchange="toggleSection(this.value === 'あり', 'housing-loan-group')" checked>なし</label></div>
+                    </div>
                     <div id="housing-loan-group" class="form-group hidden">
                         <div style="margin-bottom: 15px;">
                             <label>住宅ローン_申告書</label>
                             <input type="file" name="housing_loan_declaration_file" multiple>
-                            <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※令和8年分の「給与所得者の(特定増改築等)住宅借入金等特別控除申告書」をアップロードしてください。</p>
+                            <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※入居1年目の確定申告後に税務署から送付されている令和8年分の「給与所得者の(特定増改築等)住宅借入金等特別控除申告書」をアップロードしてください。</p>
                         </div>
                         <div>
                             <label>住宅ローン_証明書</label>
                             <input type="file" name="housing_loan_certificate_file" multiple>
-                            <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※「住宅取得資金に係る借入金の年末残高等証明書」をアップロードしてください。複数ある場合はすべてアップロードしてください。</p>
+                            <p style="font-size: 0.8em; color: #555; margin-top: 5px;">※金融機関から送付された「住宅取得資金に係る借入金の年末残高等証明書」をアップロードしてください。<br>複数ある場合はすべてアップロードしてください。</p>
                         </div>
                     </div>
                 </fieldset>
@@ -1041,9 +1115,11 @@
                 ['postal_code', '郵便番号'], ['address1', '住所1'], ['address2', '住所2'], 
                 ['householder_name', '世帯主の氏名'], ['householder_relationship', '世帯主の続柄'],
                 ['year_end_adjustment', '年末調整実施可否'],
+                ['not_doing_reason', '年末調整しない理由'],
+                ['resident_tax', '住民税徴収方法'],
                 ['previous_job', '前職有無'], ['previous_job_file', '前職源泉徴収票'], 
                 ['other_income_existence', 'その他収入有無'], ['user_pension_income', '本人 年金収入'], ['user_business_income', '本人 事業収入'], ['user_severance_pay_income', '本人 退職手当等収入'], ['user_misc_income', '本人 その他収入'],
-                ['resident_tax', '住民税徴収方法'], ['spouse_existence', '配偶者有無'], 
+                ['spouse_existence', '配偶者有無'], 
                 ['spouse_last_name', '配偶者 姓'], ['spouse_first_name', '配偶者 名'],
                 ['spouse_last_name_furigana', '配偶者 姓フリガナ'], ['spouse_first_name_furigana', '配偶者 名フリガナ'],
                 ['spouse_birth_date', '配偶者 生年月日'], 
@@ -1084,7 +1160,7 @@
                 ['user_disability_certificate_file', '本人 障害者手帳'],
                 ['user_disability_certificate_remarks', '本人 障害者手帳(備考)'],
                 ['widow_status', '寡婦該当確認'], ['single_parent_status', 'ひとり親該当確認'],
-                ['working_student_status', '勤労学生該当確認'], ['student_card_file', '勤労学生_学生証'],
+                ['working_student_status', '勤労学生該当確認＜本人限定＞'], ['student_card_file', '勤労学生_学生証'],
                 ['disaster_status', '災害者該当確認'],
                 ['non_resident_dependent_status', '国外居住扶養親族有無'], 
                 ['non_resident_dependent_relation_file', '国外居住扶養親族_親族関係書類'],
@@ -1096,8 +1172,11 @@
                 ['national_health_insurance_amount', '国民健康保険料 年間支払額'],
                 ['national_health_insurance_file', '国民健康保険料 控除証明書'],
                 ['national_pension_insurance_file', '国民年金保険料 控除証明書'],
+                ['voluntary_health_insurance_payer_name', '任意継続健康保険料 支払対象者氏名'],
+                ['voluntary_health_insurance_amount', '任意継続健康保険料 年間支払額'],
+                ['voluntary_health_insurance_file', '任意継続健康保険料 控除証明書'],
                 ['small_business_deduction', '小規模企業共済掛金等控除有無'], ['small_business_file', '小規模企業共済掛金等_控除証明書'],
-                ['housing_loan_deduction', '住宅ローン控除有無'], 
+                ['housing_loan_deduction', '住宅ローン控除有無（2年目以降）'], 
                 ['housing_loan_declaration_file', '住宅ローン_申告書'],
                 ['housing_loan_certificate_file', '住宅ローン_証明書']
             );
@@ -1251,7 +1330,7 @@
             const nameAttrMap = {
                 '事業者名':'company_name', 'メールアドレス':'email_address', '姓':'last_name', '名':'first_name', '姓フリガナ':'last_name_furigana', '名フリガナ':'first_name_furigana',
                 '郵便番号':'postal_code', '住所1':'address1', '住所2':'address2', '世帯主の氏名':'householder_name', '世帯主の続柄':'householder_relationship',
-                '年末調整実施可否':'year_end_adjustment', '前職有無':'previous_job', 'その他収入有無':'other_income_existence', '本人年金収入':'user_pension_income', '本人事業収入':'user_business_income', '本人退職手当等収入':'user_severance_pay_income', '本人その他収入':'user_misc_income', '住民税徴収方法':'resident_tax',
+                '年末調整実施可否':'year_end_adjustment', '年末調整しない理由':'not_doing_reason', '前職有無':'previous_job', 'その他収入有無':'other_income_existence', '本人年金収入':'user_pension_income', '本人事業収入':'user_business_income', '本人退職手当等収入':'user_severance_pay_income', '本人その他収入':'user_misc_income', '住民税徴収方法':'resident_tax',
                 '配偶者有無':'spouse_existence', '配偶者姓':'spouse_last_name', '配偶者名':'spouse_first_name', '配偶者姓フリガナ':'spouse_last_name_furigana', '配偶者名フリガナ':'spouse_first_name_furigana',
                 '配偶者住所1':'spouse_address1', '配偶者住所2':'spouse_address2', '配偶者_住所同じ':'spouse_address_same_as_user',
                 '配偶者_給与収入金額':'spouse_salary_income', 
@@ -1264,6 +1343,11 @@
                 '国外居住扶養親族_送金関係書類':'non_resident_dependent_remittance_file',
                 '生命保険料控除有無':'life_insurance_deduction', '地震保険料控除有無':'earthquake_insurance_deduction', '社会保険料控除有無':'social_insurance_deduction',
                 '国民健康保険料 支払対象者氏名':'national_health_insurance_payer_name', '国民健康保険料 年間支払額':'national_health_insurance_amount',
+                '国民健康保険料 控除証明書':'national_health_insurance_file',
+                '国民年金保険料 控除証明書':'national_pension_insurance_file',
+                '任意継続健康保険料 支払対象者氏名':'voluntary_health_insurance_payer_name',
+                '任意継続健康保険料 年間支払額':'voluntary_health_insurance_amount',
+                '任意継続健康保険料 控除証明書':'voluntary_health_insurance_file',
                 '小規模企業共済掛金等控除有無':'small_business_deduction', 
                 '住宅ローン控除有無':'housing_loan_deduction',
                 '住宅ローン_申告書':'housing_loan_declaration_file',
@@ -1362,6 +1446,7 @@
                 '地震保険料_控除証明書URL': 'earthquake_insurance_file',
                 '国民健康保険料 控除証明書URL': 'national_health_insurance_file',
                 '国民年金保険料 控除証明書URL': 'national_pension_insurance_file',
+                '任意継続健康保険料 控除証明書URL': 'voluntary_health_insurance_file',
                 '小規模企業共済掛金等_控除証明書URL': 'small_business_file',
                 '住宅ローン_申告書URL': 'housing_loan_declaration_file',
                 '住宅ローン_証明書URL': 'housing_loan_certificate_file',
@@ -1440,7 +1525,8 @@
             document.querySelectorAll('input[type="radio"][onchange*="toggleSection"]:checked').forEach(radio => {
                 radio.dispatchEvent(new Event('change', { bubbles: true }));
             });
-            toggleMainSections(form.querySelector('input[name="year_end_adjustment"]:checked').value);
+            toggleYearEndAdjustment(form.querySelector('input[name="year_end_adjustment"]:checked').value);
+            updateResidentTaxState();
             
             const fieldsToKana = [
                 { id: 'name_last', kanaId: 'kana_last' }, { id: 'name_first', kanaId: 'kana_first' },
