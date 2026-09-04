@@ -350,7 +350,8 @@
                 return;
             }
 
-            const headers = ['氏名', '年末調整実施可否', '住民税の徴収方法'];
+            // 修正要件2 対象箇所1： '年末調整実施可否' → '年末調整実施確認'
+            const headers = ['氏名', '年末調整実施確認', '住民税の徴収方法'];
             const rows = dashboardData.employees.map(emp => {
                 return [
                     `"${(emp.name || '').replace(/"/g, '""')}"`,
@@ -623,21 +624,42 @@
         });
 
         async function loadDashboardData() {
-            const params = new URLSearchParams(window.location.search);
-            const companyName = params.get('company');
-            currentCompanyName = companyName; 
-            
             const container = document.getElementById('dashboard-content');
             const loading = document.getElementById('loading');
-            
-            if (!companyName) {
-                container.innerHTML = `<p style="color: red; text-align: center;">エラー: 対象の事業者名が指定されていません。</p>`;
-                loading.classList.add('hidden');
-                return;
-            }
+            loading.classList.remove('hidden');
 
             try {
-                const response = await fetch(`${GAS_WEB_APP_URL}?action=getClientDashboardData&company=${encodeURIComponent(companyName)}&secret=${MY_SECRET_KEY}`);
+                // 修正要件1 【ハイブリッドURLへの対応とAPI通信の追加】
+                const params = new URLSearchParams(window.location.search);
+                const rawId = params.get('id'); // 'company' から 'id' に変更
+                
+                if (!rawId) {
+                    throw new Error("対象の事業者IDが指定されていません。");
+                }
+
+                // アンダーバーで分割し、前半のID部分を抽出
+                const clientId = rawId.split('_')[0];
+                
+                // GASに対してPOSTリクエストを送信し、事業者名を取得
+                const nameResponse = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'getClientNameById',
+                        clientId: clientId,
+                        secret: MY_SECRET_KEY
+                    })
+                });
+
+                const nameResult = await nameResponse.json();
+                
+                if (nameResult.result !== 'success') {
+                    throw new Error(`事業者名の取得に失敗しました: ${nameResult.message}`);
+                }
+
+                currentCompanyName = nameResult.clientName;
+
+                // 以降は取得した事業者名を用いてデータを取得 (GETリクエスト)
+                const response = await fetch(`${GAS_WEB_APP_URL}?action=getClientDashboardData&company=${encodeURIComponent(currentCompanyName)}&secret=${MY_SECRET_KEY}`);
                 const result = await response.json();
 
                 if (result.result !== 'success') {
@@ -673,7 +695,7 @@
                             <thead>
                                 <tr>
                                     <th class="name-cell">氏名</th>
-                                    <th>年末調整実施可否</th>
+                                    <th>年末調整実施確認</th> <!-- 修正要件2 対象箇所2 -->
                                     <th>住民税の徴収方法</th>
                                     <th class="btn-cell"></th>
                                 </tr>
@@ -684,7 +706,7 @@
                         contentHtml += `
                             <tr>
                                 <td class="name-cell" data-label="氏名"><span>${escapeHtml(employee.name)}</span></td>
-                                <td data-label="年末調整実施可否">${escapeHtml(employee.adjustment)}</td>
+                                <td data-label="年末調整実施確認">${escapeHtml(employee.adjustment)}</td> <!-- 修正要件2 対象箇所3 -->
                                 <td data-label="住民税の徴収方法">${escapeHtml(employee.residentTax)}</td>
                                 <td class="btn-cell">
                                     <a href="${employee.viewUrl}" target="_blank" rel="noopener noreferrer" class="btn-confirm">
