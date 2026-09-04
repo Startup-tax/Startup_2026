@@ -419,7 +419,7 @@
     
     <script>
         // ★★★ 令和8年用の新しいGAS WebアプリURLに書き換えてください ★★★
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/YOUR_NEW_WEB_APP_ID/exec';
+        const GAS_WEB_APP_URL = 'https://script.google.com/a/macros/tax-startup.com/s/AKfycbxSIgc5YqpXhgy-7D26FI-A9iv5ZdOE6WyU0JYvMIkHbXwr9CJ_gfmzEx8smxoi9hFKyw/exec';
         const MY_SECRET_KEY = "StartupTax-Secret-Key-vB9^YWLiVoSW6y5"; // セキュリティー用
         const form = document.getElementById('main-form');
         const formContents = document.getElementById('form-contents');
@@ -854,7 +854,7 @@
                     <div class="form-group"><div class="tooltip-wrapper"><label>勤労学生該当確認＜本人限定＞</label>
                     	<div class="tooltip-container">
                             	<span class="tooltip-icon">!</span>
-                                <div class="tooltip-text">ご自身が学生の場合で令和8年(2026年)中の収入金額が163万円以下の場合は該当を選択し、学生証をアップロードしてください。</div>
+                                <div class="tooltip-text">ご自身が学生の場合で令和8年(2026年)中の収入金額が130万円以下の場合は該当を選択し、学生証をアップロードしてください。</div>
                             </div></div>
                     	<div class="radio-group"><label><input type="radio" name="working_student_status" value="該当" onchange="toggleSection(this.value === '該当', 'student-card-group')">該当</label><label><input type="radio" name="working_student_status" value="非該当" onchange="toggleSection(this.value === '該当', 'student-card-group')" checked>非該当</label></div></div>
                     <div id="student-card-group" class="form-group hidden"><label>勤労学生_学生証</label><input type="file" name="student_card_file"></div>
@@ -1494,7 +1494,10 @@
             try {
                 const params = new URLSearchParams(window.location.search);
                 const editId = params.get('editId');
-                const companyName = params.get('company');
+                
+                // ハイブリッドパラメータ（?id=clientId_clientName）の取得
+                const idParam = params.get('id');
+                const companyNameParam = params.get('company'); // 互換性のため古いパラメータも確認
 
                 if (editId) {
                     const titleElement = document.getElementById('form-title');
@@ -1504,19 +1507,52 @@
                     setTimeout(() => loadDataForEdit(editId), 100);
                 }
 
-                if (companyName) {
+                // URLから会社名とIDを処理
+                let clientId = '';
+                let displayCompanyName = '';
+
+                if (idParam) {
+                    // "_" で分割して前半をID、後半以降を会社名として扱う
+                    const parts = idParam.split('_');
+                    clientId = parts[0]; // 前半の英数字（ID）部分のみを抽出
+                    
+                    if (parts.length > 1) {
+                        // 日本語部分が含まれている場合は結合して会社名とする
+                        const rawCompanyName = parts.slice(1).join('_');
+                        displayCompanyName = rawCompanyName;
+                        
+                        // 【】の中身を抽出する既存ロジックを適用
+                        const match = rawCompanyName.match(/【(.*?)】/);
+                        if (match && match[1]) {
+                            displayCompanyName = match[1];
+                        }
+                    }
+                } else if (companyNameParam) {
+                    // 古いURL仕様のフォールバック
+                    clientId = companyNameParam; 
+                    displayCompanyName = companyNameParam;
+                    const match = companyNameParam.match(/【(.*?)】/);
+                    if (match && match[1]) {
+                        displayCompanyName = match[1];
+                    }
+                }
+
+                // 取得したID（または会社名）をフォームにセット
+                if (clientId || displayCompanyName) {
                     const hiddenInput = document.getElementById('company_name_hidden');
                     const displayInput = document.getElementById('company_name_display');
                     
-                    hiddenInput.value = companyName; // 隠しフィールドに元の名前をセット
-
-                    let displayName = companyName;
-                    const match = companyName.match(/【(.*?)】/);
-                    if (match && match[1]) {
-                        displayName = match[1]; // 【】の中身を抽出
+                    // hiddenにはバックエンド通信用のIDをセット（またはそのままの文字列）
+                    hiddenInput.value = clientId || displayCompanyName; 
+                    // 表示用フィールドにパースした会社名をセット
+                    if (displayCompanyName) {
+                        displayInput.value = decodeURIComponent(displayCompanyName); 
+                    } else {
+                        // 会社名部分がURLから欠損している場合はIDを表示
+                        displayInput.value = clientId;
                     }
-                    displayInput.value = displayName; // 表示用フィールドにセット
                 }
+
             } catch(e) { console.error("URLパラメータ処理エラー:", e); }
             
             document.querySelectorAll('.date-select-group').forEach(setupWarekiDateFields);
