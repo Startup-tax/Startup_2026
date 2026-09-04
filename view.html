@@ -14,7 +14,510 @@
 
     <style>
         :root {
-            --primary-color: #1e3656; --secondary-color: #5dade2; --accent-color: #e52128;
+            --primary-color: #1e3656; --seconda<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年末調整 回答内容確認</title>
+    
+    <link rel="icon" href="./favicon.jpg" type="image/jpeg">
+    <link rel="apple-touch-icon" href="./logo-color-2.jpg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #1e3656;
+            --secondary-color: #5dade2;
+            --accent-color: #e52128;
+            --success-color: #27ae60;
+            --light-gray: #f8f9fa;
+            --medium-gray: #dee2e6;
+            --dark-gray: #495057;
+            --border-radius: 8px;
+        }
+        body {
+            font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6; color: #333; max-width: 800px;
+            margin: 20px auto; padding: 0 20px; background-color: #f4f7f9;
+        }
+        .container {
+            background-color: #fff; padding: 30px; border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border-top: 5px solid var(--secondary-color);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: var(--primary-color); text-align: center; font-weight: 700;
+            font-size: 1.8em; margin-top: 0; margin-bottom: 30px;
+        }
+        #message {
+            text-align: center; font-size: 1.1em; color: var(--primary-color);
+            padding: 20px; background-color: var(--light-gray);
+            border-radius: var(--border-radius); margin-bottom: 25px;
+        }
+        
+        .section {
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            padding-top: 30px;
+            margin-top: 30px;
+            position: relative;
+        }
+        .section-title {
+            position: absolute;
+            top: -14px;
+            left: 20px;
+            background-color: #fff;
+            padding: 0 10px;
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1.2em;
+        }
+        .section-content {
+            padding-top: 10px;
+        }
+        .data-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: flex-start;
+        }
+        .data-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .data-label {
+            flex-basis: 35%;
+            font-weight: bold;
+            color: var(--primary-color);
+            padding-right: 15px;
+            box-sizing: border-box;
+        }
+        .data-value {
+            flex-basis: 65%;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+        .data-value a {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: block;
+            margin-bottom: 5px;
+            word-break: break-all;
+        }
+        .data-value a:hover {
+            text-decoration: underline;
+        }
+        
+        .btn {
+            background-color: var(--secondary-color); color: white; padding: 12px 25px;
+            border: none; border-radius: var(--border-radius); cursor: pointer;
+            font-size: 16px; font-weight: 700;
+            transition: background-color 0.3s, transform 0.2s;
+            text-decoration: none; display: inline-block;
+        }
+        .btn:hover {
+            background-color: #4aa3d3; transform: translateY(-2px);
+        }
+        .btn-secondary { background-color: #6c757d; }
+        .file-input, .category-select {
+            width: 100%; padding: 12px; border: 1px solid #ccc;
+            border-radius: var(--border-radius); box-sizing: border-box;
+            font-family: inherit; font-size: inherit; background-color: #fff;
+        }
+        .text-center { text-align: center; }
+        .mt-20 { margin-top: 20px; }
+        .mb-20 { margin-bottom: 20px; }
+
+        .hidden { display: none !important; }
+        #loading {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #ffffff;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999;
+        }
+        .loading-logo { max-width: 150px; margin-bottom: 20px; }
+        #loading p { color: var(--primary-color); font-size: 1.2em; margin-top: 20px; font-weight: 700; }
+        #loading p.sub-text { font-size: 0.9em; color: #555; margin-top: 10px; text-align: center; font-weight: 400; }
+        .dots-loader { display: flex; justify-content: center; align-items: center; height: 40px; }
+        .dots-loader div { width: 15px; height: 15px; background-color: var(--primary-color); border-radius: 50%; margin: 0 5px; animation: bounce 1.4s infinite ease-in-out both; }
+        .dots-loader .dot1 { animation-delay: -0.32s; } .dots-loader .dot2 { animation-delay: -0.16s; } .dots-loader .dot3 { animation-delay: 0s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+
+        @media (max-width: 600px) {
+            body { padding: 0 10px; }
+            h1 { font-size: 1.6em; }
+            .container { padding: 20px; }
+            .section-title { left: 15px; font-size: 1.1em;}
+            .data-row { flex-direction: column; padding-bottom: 15px; }
+            .data-label { margin-bottom: 3px; font-size: 0.9em;}
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading">
+        <img src="./favicon.jpg" alt="Logo" class="loading-logo">
+        <div class="dots-loader">
+            <div class="dot1"></div> <div class="dot2"></div> <div class="dot3"></div>
+        </div>
+        <p>データを読み込んでいます...</p>
+        <p class="sub-text">この処理には数秒かかることがあります。<br>画面を閉じずにお待ちください。</p>
+    </div>
+
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="./logo-color-2.jpg" alt="スタートアップ税理士法人 Logo" style="max-width: 180px;">
+        </div>
+        <h1>年末調整 回答内容確認</h1>
+        <div id="message"></div>
+        <div id="data-container"></div>
+    </div>
+
+    <div class="container hidden" id="edit-section">
+        <h2>回答内容の修正</h2>
+        <p class="text-center">住所や扶養情報などに変更があった場合は、こちらのボタンから内容を修正できます。</p>
+        <div class="text-center mt-20">
+            <button type="button" class="btn btn-secondary" onclick="redirectToEdit()">この回答を修正する</button>
+        </div>
+    </div>
+    
+    <div class="container hidden" id="add-files-section">
+        <h2>追加の書類を提出</h2>
+        <p class="text-center">不足していた書類や、後日発行された証明書などはこちらから追加でご提出いただけます。</p>
+        
+        <div class="mt-20 mb-20">
+            <label for="file-category-select" style="text-align:center;">1. アップロード先の項目を選択</label>
+            <select id="file-category-select" class="category-select">
+                <option value="">-- 項目を選択してください --</option>
+                <option value="前職源泉徴収票">前職の源泉徴収票</option>
+                <option value="配偶者障害者手帳">配偶者の障害者手帳</option>
+                <option value="扶養1_障害者手帳">扶養親族1の障害者手帳</option>
+                <option value="扶養2_障害者手帳">扶養親族2の障害者手帳</option>
+                <option value="扶養3_障害者手帳">扶養親族3の障害者手帳</option>
+                <option value="扶養4_障害者手帳">扶養親族4の障害者手帳</option>
+                <option value="扶養5_障害者手帳">扶養親族5の障害者手帳</option>
+                <option value="扶養6_障害者手帳">扶養親族6の障害者手帳</option>
+                <option value="本人障害者手帳">ご本人の障害者手帳</option>
+                <option value="勤労学生_学生証">勤労学生の学生証</option>
+                <option value="生命保険料_控除証明書">生命保険料の控除証明書</option>
+                <option value="地震保険料_控除証明書">地震保険料の控除証明書</option>
+                <option value="社会保険料_国民健康保険料資料">国民健康保険料の証明書</option>
+                <option value="社会保険料_国民年金控除証明書">国民年金保険料の控除証明書</option>
+                <option value="小規模企業共済掛金等_控除証明書">小規模企業共済掛金等の証明書</option>
+                <option value="住宅ローン_申告書・証明書">住宅ローン控除の申告書・証明書</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="additional-files" style="text-align:center;">2. ファイルを選択</label>
+            <input type="file" id="additional-files" class="file-input" multiple>
+        </div>
+
+        <div class="text-center mt-20">
+            <button type="button" class="btn" onclick="uploadAdditionalFiles()">追加で提出する</button>
+        </div>
+        <div id="upload-message" class="mt-20" style="text-align:center; font-weight: bold;"></div>
+    </div>
+
+    <script>
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwvQJgN_HG3j34Y1drCzF7i9ZDKu4OYnuUafQm1HFz9ngtGBa7sG0jbcDGpGHZm6SBBNg/exec';
+        const MY_SECRET_KEY = "StartupTax-Secret-Key-vB9^YWLiVoSW6y5"; // セキュリティー用
+        let submissionId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            submissionId = params.get('id');
+            const isEditMode = params.get('mode') === 'edit';
+            fetchData(submissionId, isEditMode);
+        });
+
+        async function fetchData(id, isEditMode) {
+            const dataContainer = document.getElementById('data-container');
+            const message = document.getElementById('message');
+            const loading = document.getElementById('loading');
+            
+            dataContainer.innerHTML = '';
+            message.textContent = '';
+
+            if (!id) {
+                message.textContent = '回答IDが見つからないため、回答を表示できません。';
+                loading.classList.add('hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${GAS_WEB_APP_URL}?id=${id}`);
+                const result = await response.json();
+
+                if (result.result !== 'success') {
+                    throw new Error(result.message);
+                }
+
+                message.textContent = `回答ID: ${id} の内容を表示しています。`;
+                
+                if (isEditMode) {
+                    document.getElementById('edit-section').classList.remove('hidden');
+                    document.getElementById('add-files-section').classList.remove('hidden');
+                }
+                
+                const data = result.data;
+
+                const addRow = (parent, label, value, urlKey) => {
+                    const rowDiv = document.createElement('div');
+                    rowDiv.classList.add('data-row');
+
+                    const labelDiv = document.createElement('div');
+                    labelDiv.classList.add('data-label');
+                    labelDiv.textContent = label;
+                    rowDiv.appendChild(labelDiv);
+
+                    const valueDiv = document.createElement('div');
+                    valueDiv.classList.add('data-value');
+
+                    // 1. ファイルリンクの場合
+                    if (urlKey) {
+                        const urls = (data[urlKey] || '').split('\n').filter(Boolean);
+                        const names = (data[urlKey.replace('URL', 'FileName')] || '').split('\n') || [];
+                        if (urls.length > 0) {
+                            urls.forEach((url, index) => {
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.textContent = names[index] || 'ファイルを開く';
+                                a.target = '_blank';
+                                a.rel = 'noopener noreferrer';
+                                a.classList.add('file-link');
+                                valueDiv.appendChild(a);
+                            });
+                        } else {
+                            valueDiv.textContent = 'なし'; // ファイルがなくても「なし」と表示
+                        }
+                    } 
+                    // 2. 金額項目の場合
+                    else if (label.includes('金額')) {
+                        const numericValue = Number(String(value || '0').replace(/,/g, ''));
+                        valueDiv.textContent = numericValue.toLocaleString('ja-JP') + ' 円'; // 0や空欄は「0円」になる
+                    } 
+                    // 3. その他のテキスト項目の場合
+                    else {
+                        valueDiv.textContent = value || 'なし'; // 空欄は「なし」と表示
+                    }
+                    
+                    rowDiv.appendChild(valueDiv);
+                    parent.appendChild(rowDiv);
+                };
+                
+                const createSection = (title, fields) => {
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.classList.add('section');
+                    let hasContent = false;
+                    
+                    const contentDiv = document.createElement('div');
+                    contentDiv.classList.add('section-content');
+                    
+                    fields.forEach(field => {
+                        // 1. 表示条件(condition)をチェック
+                        if (field.condition && !field.condition()) {
+                            return; // この項目は表示しない
+                        }
+                        
+                        // 2. 値を取得
+                        const value = field.key ? data[field.key] : (field.value !== undefined ? field.value : '');
+
+                        // 3. 項目が空かどうかに関わらず、addRow関数を呼び出す
+                        addRow(contentDiv, field.label, value, field.urlKey);
+                        hasContent = true;
+                    });
+
+                    // 4. 表示する行が1つでもあればセクションごと表示
+                    if (hasContent) {
+                        const titleDiv = document.createElement('div');
+                        titleDiv.classList.add('section-title');
+                        titleDiv.textContent = title;
+                        sectionDiv.appendChild(titleDiv);
+                        sectionDiv.appendChild(contentDiv);
+                        dataContainer.appendChild(sectionDiv);
+                    }
+                };
+                
+                let companyDisplayName = data['事業者名'] || '';
+                const match = companyDisplayName.match(/【(.*?)】/);
+                if (match && match[1]) {
+                    companyDisplayName = match[1];
+                }
+                
+                createSection('ご本人情報', [
+                    { label: '回答日時', key: 'タイムスタンプ' }, { label: '回答ID', key: '回答ID' },
+                    { label: '事業者名', value: companyDisplayName }, 
+                    { label: 'メールアドレス', key: 'メールアドレス' },
+                    { label: '氏名', value: `${data['姓'] || ''} ${data['名'] || ''}`.trim() },
+                    { label: 'フリガナ', value: `${data['姓フリガナ'] || ''} ${data['名フリガナ'] || ''}`.trim() },
+                    { label: '生年月日', key: '生年月日' }, { label: '郵便番号', key: '郵便番号' },
+                    { label: '住所', value: `${data['住所1'] || ''}${data['住所2'] || ''}`.trim() },
+                    { label: '世帯主の氏名', key: '世帯主の氏名' }, { label: '世帯主との続柄', key: '世帯主の続柄' },
+                ]);
+
+                if (data['年末調整実施可否'] === 'はい') {
+                    createSection('年末調整情報', [
+                        { label: '年末調整の実施', key: '年末調整実施可否' },
+                        { label: '前職の有無', key: '前職有無' },
+                        { label: '前職の源泉徴収票', value: ' ', urlKey: '前職源泉徴収票URL', condition: () => data['前職有無'] === 'あり' },
+                        { label: 'その他収入の有無', key: 'その他収入有無' },
+                        { label: 'その他収入金額', key: 'その他収入金額', condition: () => data['その他収入有無'] === 'あり' },
+                        { label: '住民税の徴収方法', key: '住民税徴収方法' },
+                    ]);
+                    
+                    if (data['配偶者有無'] === 'あり') {
+                        createSection('配偶者情報', [
+                           { label: '氏名', value: `${data['配偶者姓'] || ''} ${data['配偶者名'] || ''}`.trim() },
+                           { label: 'フリガナ', value: `${data['配偶者姓フリガナ'] || ''} ${data['配偶者名フリガナ'] || ''}`.trim() },
+                           { label: '生年月日', key: '配偶者生年月日' },
+                           { label: '住所', value: (data['配偶者_住所同じ'] === true || data['配偶者_住所同じ'] === 'true') ? `${data['住所1'] || ''}${data['住所2'] || ''}`.trim() : `${data['配偶者住所1'] || ''}${data['配偶者住所2'] || ''}`.trim() },
+                           { label: '給与収入金額', key: '配偶者_給与収入金額' },
+                           { label: 'その他収入金額', key: '配偶者_その他収入金額' },
+                           { label: '退職手当の有無', key: '配偶者退職手当有無' },
+                           { label: '退職手当金額', key: '配偶者退職手当等金額', condition: () => data['配偶者退職手当有無'] === 'あり' },
+                           { label: '障害者手帳の有無', key: '配偶者障害者手帳交付有無' },
+                           { label: '障害者手帳(添付)', value: ' ', urlKey: '配偶者障害者手帳URL', condition: () => data['配偶者障害者手帳交付有無'] === 'あり' },
+                           { label: '障害者手帳(備考)', key: '配偶者障害者手帳備考', condition: () => data['配偶者障害者手帳交付有無'] === 'あり' },
+                        ]);
+                    }
+
+                    if (data['扶養親族有無'] === 'あり') {
+                        for (let i = 1; i <= 6; i++) {
+                            if (data[`扶養親族${i}_姓`] || data[`扶養親族${i}_名`]) {
+                                createSection(`扶養親族 ${i}`, [
+                                    { label: '氏名', value: `${data[`扶養親族${i}_姓`] || ''} ${data[`扶養親族${i}_名`] || ''}`.trim() },
+                                    { label: 'フリガナ', value: `${data[`扶養親族${i}_姓フリガナ`] || ''} ${data[`扶養親族${i}_名フリガナ`] || ''}`.trim() },
+                                    { label: '続柄', key: `扶養親族${i}_続柄` },
+                                    { label: '生年月日', key: `扶養親族${i}_生年月日` },
+                                    { label: '住所', value: (data[`扶養親族${i}_住所同じ`] === 'true' || data[`扶養親族${i}_住所同じ`] === true) ? `${data['住所1'] || ''}${data['住所2'] || ''}`.trim() : `${data[`扶養親族${i}_住所1`] || ''}${data[`扶養親族${i}_住所2`] || ''}`.trim() },
+                                    { label: '給与収入金額', key: `扶養親族${i}_給与収入金額` },
+                                    { label: 'その他収入金額', key: `扶養親族${i}_その他収入金額` },
+                                    { label: '退職手当の有無', key: `扶養親族${i}_退職手当有無` },
+                                    { label: '退職手当等金額', key: `扶養親族${i}_退職手当等金額`, condition: () => data[`扶養親族${i}_退職手当有無`] === 'あり' },
+                                    { label: '障害者手帳の有無', key: `扶養親族${i}_障害者手帳交付有無` },
+                                    { label: '障害者手帳(添付)', value: ' ', urlKey: `扶養親族${i}_障害者手帳URL`, condition: () => data[`扶養親族${i}_障害者手帳交付有無`] === 'あり' },
+                                    { label: '障害者手帳(備考)', key: `扶養親族${i}_障害者手帳備考`, condition: () => data[`扶養親族${i}_障害者手帳交付有無`] === 'あり' },
+                                ]);
+                            }
+                        }
+                    }
+
+                    createSection('本人該当項目・各種控除', [
+                        { label: '本人障害者手帳の有無', key: '本人障害者手帳交付有無' },
+                        { label: '本人障害者手帳(添付)', value: ' ', urlKey: '本人障害者手帳URL', condition: () => data['本人障害者手帳交付有無'] === 'あり' },
+                        { label: '本人障害者手帳(備考)', key: '本人障害者手帳備考', condition: () => data['本人障害者手帳交付有無'] === 'あり' },
+                        { label: '寡婦', key: '寡婦該当確認' }, { label: 'ひとり親', key: 'ひとり親該当確認' },
+                        { label: '勤労学生', key: '勤労学生該当確認' },
+                        { label: '学生証(添付)', value: ' ', urlKey: '勤労学生_学生証URL', condition: () => data['勤労学生該当確認'] === '該当' },
+                        { label: '災害者', key: '災害者該当確認' }, { label: '生命保険料控除', key: '生命保険料控除有無' },
+                        { label: '生命保険料控除証明書', value: ' ', urlKey: '生命保険料_控除証明書URL', condition: () => data['生命保険料控除有無'] === 'あり' },
+                        { label: '地震保険料控除', key: '地震保険料控除有無' },
+                        { label: '地震保険料控除証明書', value: ' ', urlKey: '地震保険料_控除証明書URL', condition: () => data['地震保険料控除有無'] === 'あり' },
+                        { label: '社会保険料控除', key: '社会保険料控除有無' },
+                        { label: '国民健康保険料(支払者)', key: '社会保険料_国民健康保険支払対象者氏名', condition: () => data['社会保険料控除有無'] === 'あり' },
+                        { label: '国民健康保険料(支払金額)', key: '社会保険料_国民健康保険年間支払金額', condition: () => data['社会保険料控除有無'] === 'あり' },
+                        { label: '国民健康保険料証明書', value: ' ', urlKey: '社会保険料_国民健康保険料資料URL', condition: () => data['社会保険料控除有無'] === 'あり' },
+                        { label: '国民年金保険料証明書', value: ' ', urlKey: '社会保険料_国民年金控除証明書URL', condition: () => data['社会保険料控除有無'] === 'あり' },
+                        { label: '小規模企業共済等掛金控除', key: '小規模企業共済掛金等控除有無' },
+                        { label: '小規模企業共済等証明書', value: ' ', urlKey: '小規模企業共済掛金等_控除証明書URL', condition: () => data['小規模企業共済掛金等控除有無'] === 'あり' },
+                        { label: '住宅ローン控除', key: '住宅ローン控除有無' },
+                        { label: '住宅ローン控除申告書等', value: ' ', urlKey: '住宅ローン_申告書・証明書URL', condition: () => data['住宅ローン控除有無'] === 'あり' },
+                    ]);
+                } else {
+                    createSection('年末調整情報', [
+                        { label: '年末調整の実施', key: '年末調整実施可否' }
+                    ]);
+                }
+                
+            } catch (error) {
+                message.textContent = `エラー: ${error.message}`;
+                console.error('Fetch Error:', error);
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        function redirectToEdit() {
+            if (submissionId) {
+                window.location.href = `index.html?editId=${submissionId}&mode=edit`;
+            }
+        }
+        
+        async function uploadAdditionalFiles() {
+            const fileInput = document.getElementById('additional-files');
+            const categorySelect = document.getElementById('file-category-select');
+            const uploadMessage = document.getElementById('upload-message');
+            
+            const selectedCategory = categorySelect.value;
+            if (!selectedCategory) {
+                uploadMessage.textContent = 'アップロード先の項目を選択してください。';
+                uploadMessage.style.color = 'red';
+                return;
+            }
+
+            if (fileInput.files.length === 0) {
+                uploadMessage.textContent = 'ファイルが選択されていません。';
+                uploadMessage.style.color = 'red';
+                return;
+            }
+
+            if (!submissionId) {
+                 uploadMessage.textContent = '回答IDが見つからないため、アップロードできません。';
+                 uploadMessage.style.color = 'red';
+                return;
+            }
+
+            uploadMessage.textContent = 'アップロード中...';
+            uploadMessage.style.color = 'var(--primary-color)';
+
+            const fileToBase64 = (file) => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve({ name: file.name, mimeType: file.type, base64: reader.result.split(',')[1] });
+                reader.onerror = error => reject(error);
+            });
+
+            const filePromises = Array.from(fileInput.files).map(fileToBase64);
+            const files = await Promise.all(filePromises);
+
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    redirect: 'follow',
+                    body: JSON.stringify({
+                        action: 'addFiles',
+                        id: submissionId,
+                        files: files,
+                        targetHeaderBase: selectedCategory,
+                        secret: MY_SECRET_KEY
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.result === 'success') {
+                    uploadMessage.textContent = 'ファイルを追加しました。ページをリロードして確認してください。';
+                    uploadMessage.style.color = 'var(--success-color)';
+                    fileInput.value = '';
+                    categorySelect.value = '';
+                } else {
+                    throw new Error(result.message || '不明なエラーが発生しました。');
+                }
+            } catch (error) {
+                uploadMessage.textContent = `アップロードに失敗しました: ${error.message}`;
+                uploadMessage.style.color = 'red';
+            }
+        }
+    </script>
+</body>
+</html>ry-color: #5dade2; --accent-color: #e52128;
             --success-color: #27ae60; --light-gray: #f8f9fa; --medium-gray: #dee2e6;
             --dark-gray: #495057; --border-radius: 8px;
         }
