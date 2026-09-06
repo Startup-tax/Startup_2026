@@ -1516,40 +1516,35 @@
 
                     // URLから会社名とIDを処理
                     let clientId = '';
-                    let displayCompanyName = '';
 
                     if (idParam) {
-                        // "_" で分割して前半をID、後半以降を会社名として扱う
                         const parts = idParam.split('_');
                         clientId = parts[0]; 
                         
+                        let needsApiBlock = false;
+                        let decodedName = '';
+                        let displayCompanyName = '';
+
                         if (parts.length > 1) {
-                            // ★ パターンA：URLが切れておらず会社名が含まれている場合
-                            // ローディング画面は出さず、瞬時にフォームを表示する
                             displayCompanyName = parts.slice(1).join('_');
-                            let decodedName = decodeURIComponent(displayCompanyName);
-                            const match = decodedName.match(/【(.*?)】/);
-                            if (match && match[1]) {
-                                decodedName = match[1];
-                            }
-                            
-                            // 即時フォームにセット
-                            document.getElementById('company_name_hidden').value = clientId || displayCompanyName; 
-                            document.getElementById('company_name_display').value = decodedName;
-                            
-                            // 裏側でこっそりAPI通信して、万が一文字化け等があれば上書きする（画面は止めない）
-                            fetch(GAS_WEB_APP_URL, {
-                                method: 'POST',
-                                body: JSON.stringify({ action: 'getClientNameById', clientId: clientId, secret: MY_SECRET_KEY })
-                            }).then(r => r.json()).then(res => {
-                                if (res.result === 'success' && res.clientName) {
-                                    document.getElementById('company_name_display').value = res.clientName;
+                            try {
+                                decodedName = decodeURIComponent(displayCompanyName);
+                                const match = decodedName.match(/【(.*?)】/);
+                                if (match && match[1]) {
+                                    decodedName = match[1];
                                 }
-                            }).catch(e => console.error("裏側での事業者名確認に失敗:", e));
-                            
+                            } catch(e) {
+                                // デコードエラー（URLがエンコードの途中で不自然に切れている場合）
+                                needsApiBlock = true;
+                            }
                         } else {
-                            // ★ パターンB：URLが途切れてIDしかない場合
-                            // ここだけは正確な名前を引っ張ってくるためにローディング画面を出して待機する
+                            // _ 以降がない場合
+                            needsApiBlock = true;
+                        }
+
+                        if (needsApiBlock) {
+                            // ★ パターンB：URLが途切れている、またはデコードエラーになる場合
+                            // ローディング画面を出してAPI通信を待つ
                             loading.classList.remove('hidden');
                             try {
                                 const response = await fetch(GAS_WEB_APP_URL, {
@@ -1558,27 +1553,44 @@
                                 });
                                 const result = await response.json();
                                 if (result.result === 'success' && result.clientName) {
-                                    displayCompanyName = result.clientName;
-                                } else {
-                                    console.warn("APIからの事業者名取得に失敗:", result.message);
+                                    decodedName = result.clientName;
                                 }
                             } catch (apiError) {
                                 console.error("事業者名取得API通信エラー:", apiError);
                             }
                             
-                            // 取得後にセット
                             document.getElementById('company_name_hidden').value = clientId;
-                            document.getElementById('company_name_display').value = displayCompanyName || clientId;
+                            document.getElementById('company_name_display').value = decodedName || clientId;
+                            
+                        } else {
+                            // ★ パターンA：URLからデコードできた場合
+                            // ローディングは出さずに即時表示
+                            document.getElementById('company_name_hidden').value = clientId || displayCompanyName; 
+                            document.getElementById('company_name_display').value = decodedName;
+                            
+                            // 裏側でAPI通信し、文字の途中で切れていた場合（「株式会社テス」等）に上書き補完する
+                            fetch(GAS_WEB_APP_URL, {
+                                method: 'POST',
+                                body: JSON.stringify({ action: 'getClientNameById', clientId: clientId, secret: MY_SECRET_KEY })
+                            }).then(r => r.json()).then(res => {
+                                if (res.result === 'success' && res.clientName) {
+                                    document.getElementById('company_name_display').value = res.clientName;
+                                }
+                            }).catch(e => console.error("裏側での事業者名確認に失敗:", e));
                         }
                         
                     } else if (companyNameParam) {
-                        // 古いURL仕様のフォールバック（画面ブロックなしで即時表示）
+                        // 古いURL仕様のフォールバック
                         clientId = companyNameParam; 
-                        displayCompanyName = companyNameParam;
-                        let decodedName = decodeURIComponent(displayCompanyName);
-                        const match = decodedName.match(/【(.*?)】/);
-                        if (match && match[1]) {
-                            decodedName = match[1];
+                        let decodedName = "";
+                        try {
+                            decodedName = decodeURIComponent(companyNameParam);
+                            const match = decodedName.match(/【(.*?)】/);
+                            if (match && match[1]) {
+                                decodedName = match[1];
+                            }
+                        } catch(e) {
+                            decodedName = companyNameParam;
                         }
                         document.getElementById('company_name_hidden').value = clientId;
                         document.getElementById('company_name_display').value = decodedName;
