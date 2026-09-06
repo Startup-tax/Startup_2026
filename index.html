@@ -399,7 +399,6 @@
         <div class="dots-loader">
             <div class="dot1"></div> <div class="dot2"></div> <div class="dot3"></div>
         </div>
-        <!-- ▼ 初期表示時は「読み込み中」になるように変更 ▼ -->
         <p id="loading-text">データを読み込んでいます...</p>
         <p class="sub-text">この処理には数秒かかることがあります。<br>画面を閉じずにお待ちください。</p>
     </div>
@@ -1217,7 +1216,7 @@
 
         async function submitForm() {
             confirmContents.classList.add('hidden');
-            // ▼ ここで文字を「送信しています...」に切り替えます ▼
+            // ▼ 送信ボタンを押した時だけ文字を「送信しています...」に切り替える
             document.getElementById('loading-text').textContent = '送信しています...';
             loading.classList.remove('hidden');
             
@@ -1489,7 +1488,8 @@
         $(function() {
             formContents.classList.remove('hidden');
             confirmContents.classList.add('hidden');
-            loading.classList.remove('hidden'); // 初期表示時はローディングを表示
+            // ▼ 初期表示時はローディング画面を消した状態からスタートする
+            loading.classList.add('hidden'); 
             complete.classList.add('hidden');
             
             populateMainSections();
@@ -1505,11 +1505,13 @@
                     const companyNameParam = params.get('company'); // 互換性のため古いパラメータも確認
 
                     if (editId) {
+                        // ▼「回答の修正」として開かれた場合は、通信が発生するのでローディングを表示
+                        loading.classList.remove('hidden'); 
                         const titleElement = document.getElementById('form-title');
                         titleElement.innerHTML = '年末調整情報<br class="mobile-break">の修正';
                         document.getElementById('main-submit-btn').textContent = '更新内容の確認へ';
                         document.getElementById('edit-id').value = editId;
-                        setTimeout(() => loadDataForEdit(editId), 100);
+                        await loadDataForEdit(editId); // データの読み込みが終わるまで待つ
                     }
 
                     // URLから会社名とIDを処理
@@ -1519,18 +1521,40 @@
                     if (idParam) {
                         // "_" で分割して前半をID、後半以降を会社名として扱う
                         const parts = idParam.split('_');
-                        clientId = parts[0]; // 前半の英数字（ID）部分のみを抽出
+                        clientId = parts[0]; 
                         
-                        // IDを用いてAPIから正確な事業者名を取得する
-                        if (clientId) {
+                        if (parts.length > 1) {
+                            // ★ パターンA：URLが切れておらず会社名が含まれている場合
+                            // ローディング画面は出さず、瞬時にフォームを表示する
+                            displayCompanyName = parts.slice(1).join('_');
+                            let decodedName = decodeURIComponent(displayCompanyName);
+                            const match = decodedName.match(/【(.*?)】/);
+                            if (match && match[1]) {
+                                decodedName = match[1];
+                            }
+                            
+                            // 即時フォームにセット
+                            document.getElementById('company_name_hidden').value = clientId || displayCompanyName; 
+                            document.getElementById('company_name_display').value = decodedName;
+                            
+                            // 裏側でこっそりAPI通信して、万が一文字化け等があれば上書きする（画面は止めない）
+                            fetch(GAS_WEB_APP_URL, {
+                                method: 'POST',
+                                body: JSON.stringify({ action: 'getClientNameById', clientId: clientId, secret: MY_SECRET_KEY })
+                            }).then(r => r.json()).then(res => {
+                                if (res.result === 'success' && res.clientName) {
+                                    document.getElementById('company_name_display').value = res.clientName;
+                                }
+                            }).catch(e => console.error("裏側での事業者名確認に失敗:", e));
+                            
+                        } else {
+                            // ★ パターンB：URLが途切れてIDしかない場合
+                            // ここだけは正確な名前を引っ張ってくるためにローディング画面を出して待機する
+                            loading.classList.remove('hidden');
                             try {
                                 const response = await fetch(GAS_WEB_APP_URL, {
                                     method: 'POST',
-                                    body: JSON.stringify({
-                                        action: 'getClientNameById',
-                                        clientId: clientId,
-                                        secret: MY_SECRET_KEY
-                                    })
+                                    body: JSON.stringify({ action: 'getClientNameById', clientId: clientId, secret: MY_SECRET_KEY })
                                 });
                                 const result = await response.json();
                                 if (result.result === 'success' && result.clientName) {
@@ -1541,44 +1565,29 @@
                             } catch (apiError) {
                                 console.error("事業者名取得API通信エラー:", apiError);
                             }
+                            
+                            // 取得後にセット
+                            document.getElementById('company_name_hidden').value = clientId;
+                            document.getElementById('company_name_display').value = displayCompanyName || clientId;
                         }
                         
-                        // APIで取得できなかった場合、URLに日本語が含まれていればフォールバックとして使用
-                        if (!displayCompanyName && parts.length > 1) {
-                            displayCompanyName = parts.slice(1).join('_');
-                        }
                     } else if (companyNameParam) {
-                        // 古いURL仕様のフォールバック
+                        // 古いURL仕様のフォールバック（画面ブロックなしで即時表示）
                         clientId = companyNameParam; 
                         displayCompanyName = companyNameParam;
-                    }
-
-                    // 取得したIDと会社名をフォームにセット
-                    if (clientId || displayCompanyName) {
-                        const hiddenInput = document.getElementById('company_name_hidden');
-                        const displayInput = document.getElementById('company_name_display');
-                        
-                        // hiddenにはバックエンド通信用のIDをセット（またはそのままの文字列）
-                        hiddenInput.value = clientId || displayCompanyName; 
-                        
-                        // 表示用フィールドに会社名をセット（【】の中身を抽出する処理を適用）
-                        if (displayCompanyName) {
-                            let decodedName = decodeURIComponent(displayCompanyName);
-                            const match = decodedName.match(/【(.*?)】/);
-                            if (match && match[1]) {
-                                decodedName = match[1];
-                            }
-                            displayInput.value = decodedName; 
-                        } else {
-                            // 会社名部分が取得できない場合はIDを表示
-                            displayInput.value = clientId;
+                        let decodedName = decodeURIComponent(displayCompanyName);
+                        const match = decodedName.match(/【(.*?)】/);
+                        if (match && match[1]) {
+                            decodedName = match[1];
                         }
+                        document.getElementById('company_name_hidden').value = clientId;
+                        document.getElementById('company_name_display').value = decodedName;
                     }
 
                 } catch(e) { 
                     console.error("URLパラメータ処理・API通信エラー:", e); 
                 } finally {
-                    // API通信等も含めて初期処理が完了したらローディングを非表示にする
+                    // API通信等も含めて初期処理が完了したらローディングを確実に非表示にする
                     loading.classList.add('hidden');
                 }
                 
