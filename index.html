@@ -1486,109 +1486,134 @@
         $(function() {
             formContents.classList.remove('hidden');
             confirmContents.classList.add('hidden');
-            loading.classList.add('hidden');
+            loading.classList.remove('hidden'); // 初期表示時はローディングを表示
             complete.classList.add('hidden');
             
             populateMainSections();
             
-            try {
-                const params = new URLSearchParams(window.location.search);
-                const editId = params.get('editId');
-                
-                // ハイブリッドパラメータ（?id=clientId_clientName）の取得
-                const idParam = params.get('id');
-                const companyNameParam = params.get('company'); // 互換性のため古いパラメータも確認
-
-                if (editId) {
-                    const titleElement = document.getElementById('form-title');
-                    titleElement.innerHTML = '年末調整情報<br class="mobile-break">の修正';
-                    document.getElementById('main-submit-btn').textContent = '更新内容の確認へ';
-                    document.getElementById('edit-id').value = editId;
-                    setTimeout(() => loadDataForEdit(editId), 100);
-                }
-
-                // URLから会社名とIDを処理
-                let clientId = '';
-                let displayCompanyName = '';
-
-                if (idParam) {
-                    // "_" で分割して前半をID、後半以降を会社名として扱う
-                    const parts = idParam.split('_');
-                    clientId = parts[0]; // 前半の英数字（ID）部分のみを抽出
+            // 非同期でURLパラメータ処理とAPI通信を行う即時実行関数
+            (async () => {
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    const editId = params.get('editId');
                     
-                    if (parts.length > 1) {
-                        // 日本語部分が含まれている場合は結合して会社名とする
-                        const rawCompanyName = parts.slice(1).join('_');
-                        displayCompanyName = rawCompanyName;
+                    // ハイブリッドパラメータ（?id=clientId_clientName）の取得
+                    const idParam = params.get('id');
+                    const companyNameParam = params.get('company'); // 互換性のため古いパラメータも確認
+
+                    if (editId) {
+                        const titleElement = document.getElementById('form-title');
+                        titleElement.innerHTML = '年末調整情報<br class="mobile-break">の修正';
+                        document.getElementById('main-submit-btn').textContent = '更新内容の確認へ';
+                        document.getElementById('edit-id').value = editId;
+                        setTimeout(() => loadDataForEdit(editId), 100);
+                    }
+
+                    // URLから会社名とIDを処理
+                    let clientId = '';
+                    let displayCompanyName = '';
+
+                    if (idParam) {
+                        // "_" で分割して前半をID、後半以降を会社名として扱う
+                        const parts = idParam.split('_');
+                        clientId = parts[0]; // 前半の英数字（ID）部分のみを抽出
                         
-                        // 【】の中身を抽出する既存ロジックを適用
-                        const match = rawCompanyName.match(/【(.*?)】/);
-                        if (match && match[1]) {
-                            displayCompanyName = match[1];
+                        // IDを用いてAPIから正確な事業者名を取得する
+                        if (clientId) {
+                            try {
+                                const response = await fetch(GAS_WEB_APP_URL, {
+                                    method: 'POST',
+                                    body: JSON.stringify({
+                                        action: 'getClientNameById',
+                                        clientId: clientId,
+                                        secret: MY_SECRET_KEY
+                                    })
+                                });
+                                const result = await response.json();
+                                if (result.result === 'success' && result.clientName) {
+                                    displayCompanyName = result.clientName;
+                                } else {
+                                    console.warn("APIからの事業者名取得に失敗:", result.message);
+                                }
+                            } catch (apiError) {
+                                console.error("事業者名取得API通信エラー:", apiError);
+                            }
                         }
+                        
+                        // APIで取得できなかった場合、URLに日本語が含まれていればフォールバックとして使用
+                        if (!displayCompanyName && parts.length > 1) {
+                            displayCompanyName = parts.slice(1).join('_');
+                        }
+                    } else if (companyNameParam) {
+                        // 古いURL仕様のフォールバック
+                        clientId = companyNameParam; 
+                        displayCompanyName = companyNameParam;
                     }
-                } else if (companyNameParam) {
-                    // 古いURL仕様のフォールバック
-                    clientId = companyNameParam; 
-                    displayCompanyName = companyNameParam;
-                    const match = companyNameParam.match(/【(.*?)】/);
-                    if (match && match[1]) {
-                        displayCompanyName = match[1];
-                    }
-                }
 
-                // 取得したID（または会社名）をフォームにセット
-                if (clientId || displayCompanyName) {
-                    const hiddenInput = document.getElementById('company_name_hidden');
-                    const displayInput = document.getElementById('company_name_display');
-                    
-                    // hiddenにはバックエンド通信用のIDをセット（またはそのままの文字列）
-                    hiddenInput.value = clientId || displayCompanyName; 
-                    // 表示用フィールドにパースした会社名をセット
-                    if (displayCompanyName) {
-                        displayInput.value = decodeURIComponent(displayCompanyName); 
-                    } else {
-                        // 会社名部分がURLから欠損している場合はIDを表示
-                        displayInput.value = clientId;
+                    // 取得したIDと会社名をフォームにセット
+                    if (clientId || displayCompanyName) {
+                        const hiddenInput = document.getElementById('company_name_hidden');
+                        const displayInput = document.getElementById('company_name_display');
+                        
+                        // hiddenにはバックエンド通信用のIDをセット（またはそのままの文字列）
+                        hiddenInput.value = clientId || displayCompanyName; 
+                        
+                        // 表示用フィールドに会社名をセット（【】の中身を抽出する処理を適用）
+                        if (displayCompanyName) {
+                            let decodedName = decodeURIComponent(displayCompanyName);
+                            const match = decodedName.match(/【(.*?)】/);
+                            if (match && match[1]) {
+                                decodedName = match[1];
+                            }
+                            displayInput.value = decodedName; 
+                        } else {
+                            // 会社名部分が取得できない場合はIDを表示
+                            displayInput.value = clientId;
+                        }
                     }
-                }
 
-            } catch(e) { console.error("URLパラメータ処理エラー:", e); }
-            
-            document.querySelectorAll('.date-select-group').forEach(setupWarekiDateFields);
-            
-            // 初期のdisabled状態を確実に保証するため、ロード直後にcheckedのラジオボタンのchangeイベントを発火
-            document.querySelectorAll('input[type="radio"][onchange*="toggleSection"]:checked').forEach(radio => {
-                radio.dispatchEvent(new Event('change', { bubbles: true }));
-            });
-            toggleYearEndAdjustment(form.querySelector('input[name="year_end_adjustment"]:checked').value);
-            updateResidentTaxState();
-            
-            const fieldsToKana = [
-                { id: 'name_last', kanaId: 'kana_last' }, { id: 'name_first', kanaId: 'kana_first' },
-                { id: 'spouse_name_last', kanaId: 'spouse_kana_last' }, { id: 'spouse_name_first', kanaId: 'spouse_kana_first' }
-            ];
-            for (let i = 1; i <= MAX_DEPENDENTS; i++) {
-                fieldsToKana.push({ id: `dependent_${i}_name_last`, kanaId: `dependent_${i}_kana_last` });
-                fieldsToKana.push({ id: `dependent_${i}_name_first`, kanaId: `dependent_${i}_kana_first` });
-            }
-            fieldsToKana.forEach(field => {
-                const nameInput = document.getElementById(field.id);
-                const kanaInput = document.getElementById(field.kanaId);
-                if (nameInput && kanaInput) {
-                    nameInput.addEventListener('input', () => {
-                        const inputValue = nameInput.value;
-                        if (inputValue === '') {
-                            kanaInput.value = '';
-                            return;
-                        }
-                        const kanaString = [...inputValue].filter(char => wanakana.isHiragana(char) || wanakana.isKatakana(char)).join('');
-                        if (kanaString) {
-                            kanaInput.value = wanakana.toKatakana(kanaString);
-                        }
-                    });
+                } catch(e) { 
+                    console.error("URLパラメータ処理・API通信エラー:", e); 
+                } finally {
+                    // API通信等も含めて初期処理が完了したらローディングを非表示にする
+                    loading.classList.add('hidden');
                 }
-            });
+                
+                document.querySelectorAll('.date-select-group').forEach(setupWarekiDateFields);
+                
+                // 初期のdisabled状態を確実に保証するため、ロード直後にcheckedのラジオボタンのchangeイベントを発火
+                document.querySelectorAll('input[type="radio"][onchange*="toggleSection"]:checked').forEach(radio => {
+                    radio.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+                toggleYearEndAdjustment(form.querySelector('input[name="year_end_adjustment"]:checked').value);
+                updateResidentTaxState();
+                
+                const fieldsToKana = [
+                    { id: 'name_last', kanaId: 'kana_last' }, { id: 'name_first', kanaId: 'kana_first' },
+                    { id: 'spouse_name_last', kanaId: 'spouse_kana_last' }, { id: 'spouse_name_first', kanaId: 'spouse_kana_first' }
+                ];
+                for (let i = 1; i <= MAX_DEPENDENTS; i++) {
+                    fieldsToKana.push({ id: `dependent_${i}_name_last`, kanaId: `dependent_${i}_kana_last` });
+                    fieldsToKana.push({ id: `dependent_${i}_name_first`, kanaId: `dependent_${i}_kana_first` });
+                }
+                fieldsToKana.forEach(field => {
+                    const nameInput = document.getElementById(field.id);
+                    const kanaInput = document.getElementById(field.kanaId);
+                    if (nameInput && kanaInput) {
+                        nameInput.addEventListener('input', () => {
+                            const inputValue = nameInput.value;
+                            if (inputValue === '') {
+                                kanaInput.value = '';
+                                return;
+                            }
+                            const kanaString = [...inputValue].filter(char => wanakana.isHiragana(char) || wanakana.isKatakana(char)).join('');
+                            if (kanaString) {
+                                kanaInput.value = wanakana.toKatakana(kanaString);
+                            }
+                        });
+                    }
+                });
+            })(); // 即時実行関数を実行
             
             form.addEventListener('input', (event) => { if (event.target.classList.contains('currency-input')) { formatCurrency(event); } });
 
