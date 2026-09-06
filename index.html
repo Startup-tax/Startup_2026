@@ -399,7 +399,8 @@
         <div class="dots-loader">
             <div class="dot1"></div> <div class="dot2"></div> <div class="dot3"></div>
         </div>
-        <p>送信しています...</p>
+        <!-- ▼ 初期表示時は「読み込み中」になるように変更 ▼ -->
+        <p id="loading-text">データを読み込んでいます...</p>
         <p class="sub-text">この処理には数秒かかることがあります。<br>画面を閉じずにお待ちください。</p>
     </div>
     <div id="complete" class="hidden">
@@ -1216,6 +1217,8 @@
 
         async function submitForm() {
             confirmContents.classList.add('hidden');
+            // ▼ ここで文字を「送信しています...」に切り替えます ▼
+            document.getElementById('loading-text').textContent = '送信しています...';
             loading.classList.remove('hidden');
             
             form.querySelectorAll('.currency-input').forEach(input => {
