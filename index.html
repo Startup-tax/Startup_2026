@@ -1027,27 +1027,14 @@
                 input.value = input.value.replace(/,/g, '');
             });
 
-            // 一時的にdisabledを解除 (バリデーション前に解除すると、非表示項目の必須チェックに引っかかる可能性があるため、本来はバリデーション後にやるべきですが、既存ロジックを尊重します。もしhidden要素にrequiredがついているとここでエラーになるので注意が必要です。現状のHTMLを見る限り、hiddenの可能性がある要素でrequiredが付いているのは給与収入金額などで、これらは表示時のみrequiredが有効になるようにすべきですが、今回は既存ロジックの修正に留めます。)
-            const disabledElements = Array.from(form.querySelectorAll('[disabled]'));
-            disabledElements.forEach(el => el.disabled = false);
-
-            const readOnlyElements = Array.from(form.querySelectorAll('[readonly]'));
-            readOnlyElements.forEach(el => el.readOnly = false);
-
             if (!form.checkValidity()) {
                 form.reportValidity();
                 form.querySelectorAll('.currency-input').forEach(input => {
                     if(input.value) input.value = Number(input.value).toLocaleString('ja-JP');
                 });
-                
-                // ★修正箇所：バリデーション失敗時にも、disabledとreadonlyを元に戻す
-                readOnlyElements.forEach(el => el.readOnly = true);
-                disabledElements.forEach(el => el.disabled = true);
-                
-                return; // ここで早期リターン
+                return;
             }
             
-            // バリデーション成功後の処理はそのまま
             const isEditing = !!document.getElementById('edit-id').value;
             let confirmHtml = `
                 <div style="text-align:center;">
@@ -1063,6 +1050,13 @@
             confirmContents.innerHTML = confirmHtml;
 
             const table = document.getElementById('confirm-table');
+            
+            // 一時的にdisabledを解除
+            const disabledElements = Array.from(form.querySelectorAll('[disabled]'));
+            disabledElements.forEach(el => el.disabled = false);
+
+            const readOnlyElements = Array.from(form.querySelectorAll('[readonly]'));
+            readOnlyElements.forEach(el => el.readOnly = false);
             
             const formData = new FormData(form);
             
@@ -1120,7 +1114,7 @@
                 ['last_name_furigana', '姓フリガナ'], ['first_name_furigana', '名フリガナ'], ['birth_date', '生年月日'],
                 ['postal_code', '郵便番号'], ['address1', '住所1'], ['address2', '住所2'], 
                 ['householder_name', '世帯主の氏名'], ['householder_relationship', '世帯主の続柄'],
-                ['year_end_adjustment', '年末調整実施確認'],
+                ['year_end_adjustment', '年末調整実施可否'],
                 ['not_doing_reason', '年末調整しない理由'],
                 ['resident_tax', '住民税徴収方法'],
                 ['previous_job', '前職有無'], ['previous_job_file', '前職源泉徴収票'], 
@@ -1531,78 +1525,55 @@
                         const parts = idParam.split('_');
                         clientId = parts[0]; // 前半の英数字（ID）部分のみを抽出
                         
-                        let needsApiBlock = false;
-                        let decodedName = '';
-
-                        if (parts.length > 1) {
-                            displayCompanyName = parts.slice(1).join('_');
-                            try {
-                                decodedName = decodeURIComponent(displayCompanyName);
-                                const match = decodedName.match(/【(.*?)】/);
-                                if (match && match[1]) {
-                                    decodedName = match[1];
-                                }
-                            } catch(e) {
-                                // デコードエラー（URLがエンコードの途中で不自然に切れている場合）
-                                needsApiBlock = true;
-                            }
-                        } else {
-                            // _ 以降がない場合
-                            needsApiBlock = true;
-                        }
-
-                        if (needsApiBlock) {
-                            // ★ パターンB：URLが途切れている、またはデコードエラーになる場合
-                            // ローディング画面を出してAPI通信を待つ
-                            loading.classList.remove('hidden');
+                        if (clientId) {
+                            // API通信を待つ間、フォームを表示し「確認中...」とする
+                            hiddenInput.value = clientId;
+                            displayInput.value = '事業者情報を取得中...';
+                            loading.classList.add('hidden'); // ローディングは消す
+                            
+                            // IDを用いてAPIから正確な事業者名を取得する
                             try {
                                 const response = await fetch(GAS_WEB_APP_URL, {
                                     method: 'POST',
-                                    body: JSON.stringify({ action: 'getClientNameById', clientId: clientId, secret: MY_SECRET_KEY })
+                                    body: JSON.stringify({
+                                        action: 'getClientNameById',
+                                        clientId: clientId,
+                                        secret: MY_SECRET_KEY
+                                    })
                                 });
                                 const result = await response.json();
                                 if (result.result === 'success' && result.clientName) {
-                                    decodedName = result.clientName;
+                                    displayCompanyName = result.clientName;
+                                } else {
+                                    console.warn("APIからの事業者名取得に失敗:", result.message);
                                 }
                             } catch (apiError) {
                                 console.error("事業者名取得API通信エラー:", apiError);
                             }
-                            
-                            document.getElementById('company_name_hidden').value = clientId;
-                            document.getElementById('company_name_display').value = decodedName || clientId;
-                            
-                        } else {
-                            // ★ パターンA：URLからデコードできた場合
-                            // ローディングは出さずに即時表示
-                            document.getElementById('company_name_hidden').value = clientId || displayCompanyName; 
-                            document.getElementById('company_name_display').value = decodedName;
-                            
-                            // 裏側でAPI通信し、文字の途中で切れていた場合（「株式会社テス」等）に上書き補完する
-                            fetch(GAS_WEB_APP_URL, {
-                                method: 'POST',
-                                body: JSON.stringify({ action: 'getClientNameById', clientId: clientId, secret: MY_SECRET_KEY })
-                            }).then(r => r.json()).then(res => {
-                                if (res.result === 'success' && res.clientName) {
-                                    document.getElementById('company_name_display').value = res.clientName;
-                                }
-                            }).catch(e => console.error("裏側での事業者名確認に失敗:", e));
                         }
                         
+                        // APIで取得できなかった場合、URLに日本語が含まれていればフォールバックとして使用
+                        if (!displayCompanyName && parts.length > 1) {
+                            displayCompanyName = parts.slice(1).join('_');
+                        }
                     } else if (companyNameParam) {
                         // 古いURL仕様のフォールバック
                         clientId = companyNameParam; 
-                        let decodedName = "";
-                        try {
-                            decodedName = decodeURIComponent(companyNameParam);
-                            const match = decodedName.match(/【(.*?)】/);
-                            if (match && match[1]) {
-                                decodedName = match[1];
-                            }
-                        } catch(e) {
-                            decodedName = companyNameParam;
+                        displayCompanyName = companyNameParam;
+                    }
+
+                    // 取得した会社名をフォームにセット（【】の中身を抽出する処理を適用）
+                    if (displayCompanyName) {
+                        let decodedName = decodeURIComponent(displayCompanyName);
+                        const match = decodedName.match(/【(.*?)】/);
+                        if (match && match[1]) {
+                            decodedName = match[1];
                         }
-                        document.getElementById('company_name_hidden').value = clientId;
-                        document.getElementById('company_name_display').value = decodedName;
+                        displayInput.value = decodedName; 
+                        hiddenInput.value = displayCompanyName; // hiddenには元の名前をセット
+                    } else if (clientId && displayInput.value === '事業者情報を取得中...') {
+                        // 会社名部分が取得できず、確認中のままならIDを表示
+                        displayInput.value = clientId;
                     }
 
                 } catch(e) { 
@@ -1619,6 +1590,7 @@
                     radio.dispatchEvent(new Event('change', { bubbles: true }));
                 });
                 toggleYearEndAdjustment(form.querySelector('input[name="year_end_adjustment"]:checked').value);
+                updateResidentTaxState();
                 
                 const fieldsToKana = [
                     { id: 'name_last', kanaId: 'kana_last' }, { id: 'name_first', kanaId: 'kana_first' },
