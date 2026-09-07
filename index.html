@@ -1006,6 +1006,11 @@
         }
         
         function showConfirm() {
+            // 非表示エリア（.hidden）にある必須項目がバリデーションで進行不能バグを起こすのを防ぐため、確実にdisabledにする
+            form.querySelectorAll('.hidden input, .hidden select, .hidden textarea').forEach(input => {
+                input.disabled = true;
+            });
+
             formatPostalCode('postal_code');
             
             document.querySelectorAll('.date-select-group').forEach(group => {
@@ -1516,64 +1521,84 @@
 
                     // URLから会社名とIDを処理
                     let clientId = '';
-                    let displayCompanyName = '';
-                    const hiddenInput = document.getElementById('company_name_hidden');
-                    const displayInput = document.getElementById('company_name_display');
 
                     if (idParam) {
-                        // "_" で分割して前半をID、後半以降を会社名として扱う
                         const parts = idParam.split('_');
-                        clientId = parts[0]; // 前半の英数字（ID）部分のみを抽出
+                        clientId = parts[0]; 
                         
-                        if (clientId) {
-                            // API通信を待つ間、フォームを表示し「確認中...」とする
-                            hiddenInput.value = clientId;
-                            displayInput.value = '事業者情報を確認中...';
-                            loading.classList.add('hidden'); // ローディングは消す
-                            
-                            // IDを用いてAPIから正確な事業者名を取得する
+                        let needsApiBlock = false;
+                        let decodedName = '';
+                        let displayCompanyName = '';
+
+                        if (parts.length > 1) {
+                            displayCompanyName = parts.slice(1).join('_');
+                            try {
+                                decodedName = decodeURIComponent(displayCompanyName);
+                                const match = decodedName.match(/【(.*?)】/);
+                                if (match && match[1]) {
+                                    decodedName = match[1];
+                                }
+                            } catch(e) {
+                                // デコードエラー（URLがエンコードの途中で不自然に切れている場合）
+                                needsApiBlock = true;
+                            }
+                        } else {
+                            // _ 以降がない場合
+                            needsApiBlock = true;
+                        }
+
+                        if (needsApiBlock) {
+                            // ★ パターンB：URLが途切れている、またはデコードエラーになる場合
+                            // ローディング画面を出してAPI通信を待つ
+                            loading.classList.remove('hidden');
                             try {
                                 const response = await fetch(GAS_WEB_APP_URL, {
                                     method: 'POST',
-                                    body: JSON.stringify({
-                                        action: 'getClientNameById',
-                                        clientId: clientId,
-                                        secret: MY_SECRET_KEY
-                                    })
+                                    body: JSON.stringify({ action: 'getClientNameById', clientId: clientId, secret: MY_SECRET_KEY })
                                 });
                                 const result = await response.json();
                                 if (result.result === 'success' && result.clientName) {
-                                    displayCompanyName = result.clientName;
-                                } else {
-                                    console.warn("APIからの事業者名取得に失敗:", result.message);
+                                    decodedName = result.clientName;
                                 }
                             } catch (apiError) {
                                 console.error("事業者名取得API通信エラー:", apiError);
                             }
+                            
+                            document.getElementById('company_name_hidden').value = clientId;
+                            document.getElementById('company_name_display').value = decodedName || clientId;
+                            
+                        } else {
+                            // ★ パターンA：URLからデコードできた場合
+                            // ローディングは出さずに即時表示
+                            document.getElementById('company_name_hidden').value = clientId || displayCompanyName; 
+                            document.getElementById('company_name_display').value = decodedName;
+                            
+                            // 裏側でAPI通信し、文字の途中で切れていた場合（「株式会社テス」等）に上書き補完する
+                            fetch(GAS_WEB_APP_URL, {
+                                method: 'POST',
+                                body: JSON.stringify({ action: 'getClientNameById', clientId: clientId, secret: MY_SECRET_KEY })
+                            }).then(r => r.json()).then(res => {
+                                if (res.result === 'success' && res.clientName) {
+                                    document.getElementById('company_name_display').value = res.clientName;
+                                }
+                            }).catch(e => console.error("裏側での事業者名確認に失敗:", e));
                         }
                         
-                        // APIで取得できなかった場合、URLに日本語が含まれていればフォールバックとして使用
-                        if (!displayCompanyName && parts.length > 1) {
-                            displayCompanyName = parts.slice(1).join('_');
-                        }
                     } else if (companyNameParam) {
                         // 古いURL仕様のフォールバック
                         clientId = companyNameParam; 
-                        displayCompanyName = companyNameParam;
-                    }
-
-                    // 取得した会社名をフォームにセット（【】の中身を抽出する処理を適用）
-                    if (displayCompanyName) {
-                        let decodedName = decodeURIComponent(displayCompanyName);
-                        const match = decodedName.match(/【(.*?)】/);
-                        if (match && match[1]) {
-                            decodedName = match[1];
+                        let decodedName = "";
+                        try {
+                            decodedName = decodeURIComponent(companyNameParam);
+                            const match = decodedName.match(/【(.*?)】/);
+                            if (match && match[1]) {
+                                decodedName = match[1];
+                            }
+                        } catch(e) {
+                            decodedName = companyNameParam;
                         }
-                        displayInput.value = decodedName; 
-                        hiddenInput.value = displayCompanyName; // hiddenには元の名前をセット
-                    } else if (clientId && displayInput.value === '事業者情報を確認中...') {
-                        // 会社名部分が取得できず、確認中のままならIDを表示
-                        displayInput.value = clientId;
+                        document.getElementById('company_name_hidden').value = clientId;
+                        document.getElementById('company_name_display').value = decodedName;
                     }
 
                 } catch(e) { 
