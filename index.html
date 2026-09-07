@@ -1027,14 +1027,27 @@
                 input.value = input.value.replace(/,/g, '');
             });
 
+            // 一時的にdisabledを解除
+            const disabledElements = Array.from(form.querySelectorAll('[disabled]'));
+            disabledElements.forEach(el => el.disabled = false);
+
+            const readOnlyElements = Array.from(form.querySelectorAll('[readonly]'));
+            readOnlyElements.forEach(el => el.readOnly = false);
+
             if (!form.checkValidity()) {
                 form.reportValidity();
                 form.querySelectorAll('.currency-input').forEach(input => {
                     if(input.value) input.value = Number(input.value).toLocaleString('ja-JP');
                 });
-                return;
+
+                // ★修正箇所：バリデーション失敗時にも、disabledとreadonlyを元に戻す
+                readOnlyElements.forEach(el => el.readOnly = true);
+                disabledElements.forEach(el => el.disabled = true);
+                
+                return; // ここで早期リターン
             }
             
+            // バリデーション成功後の処理はそのまま
             const isEditing = !!document.getElementById('edit-id').value;
             let confirmHtml = `
                 <div style="text-align:center;">
@@ -1050,13 +1063,6 @@
             confirmContents.innerHTML = confirmHtml;
 
             const table = document.getElementById('confirm-table');
-            
-            // 一時的にdisabledを解除
-            const disabledElements = Array.from(form.querySelectorAll('[disabled]'));
-            disabledElements.forEach(el => el.disabled = false);
-
-            const readOnlyElements = Array.from(form.querySelectorAll('[readonly]'));
-            readOnlyElements.forEach(el => el.readOnly = false);
             
             const formData = new FormData(form);
             
@@ -1114,7 +1120,7 @@
                 ['last_name_furigana', '姓フリガナ'], ['first_name_furigana', '名フリガナ'], ['birth_date', '生年月日'],
                 ['postal_code', '郵便番号'], ['address1', '住所1'], ['address2', '住所2'], 
                 ['householder_name', '世帯主の氏名'], ['householder_relationship', '世帯主の続柄'],
-                ['year_end_adjustment', '年末調整実施可否'],
+                ['year_end_adjustment', '年末調整実施確認'],
                 ['not_doing_reason', '年末調整しない理由'],
                 ['resident_tax', '住民税徴収方法'],
                 ['previous_job', '前職有無'], ['previous_job_file', '前職源泉徴収票'], 
@@ -1332,14 +1338,14 @@
             const nameAttrMap = {
                 '事業者名':'company_name', 'メールアドレス':'email_address', '姓':'last_name', '名':'first_name', '姓フリガナ':'last_name_furigana', '名フリガナ':'first_name_furigana',
                 '郵便番号':'postal_code', '住所1':'address1', '住所2':'address2', '世帯主の氏名':'householder_name', '世帯主の続柄':'householder_relationship',
-                '年末調整実施可否':'year_end_adjustment', '年末調整しない理由':'not_doing_reason', '前職有無':'previous_job', 'その他収入有無':'other_income_existence', '本人年金収入':'user_pension_income', '本人事業収入':'user_business_income', '本人退職手当等収入':'user_severance_pay_income', '本人その他収入':'user_misc_income', '住民税徴収方法':'resident_tax',
+                '年末調整実施確認':'year_end_adjustment', '年末調整しない理由':'not_doing_reason', '前職有無':'previous_job', 'その他収入有無':'other_income_existence', '本人年金収入':'user_pension_income', '本人事業収入':'user_business_income', '本人退職手当等収入':'user_severance_pay_income', '本人その他収入':'user_misc_income', '住民税徴収方法':'resident_tax',
                 '配偶者有無':'spouse_existence', '配偶者姓':'spouse_last_name', '配偶者名':'spouse_first_name', '配偶者姓フリガナ':'spouse_last_name_furigana', '配偶者名フリガナ':'spouse_first_name_furigana',
                 '配偶者住所1':'spouse_address1', '配偶者住所2':'spouse_address2', '配偶者_住所同じ':'spouse_address_same_as_user',
-                '配偶者_給与収入金額':'spouse_salary_income', 
-                '配偶者その他収入有無':'spouse_other_income_existence', '配偶者_年金収入金額':'spouse_pension_income', '配偶者_事業収入金額':'spouse_business_income', '配偶者_退職手当等収入金額':'spouse_severance_pay_income', '配偶者_その他収入金額(その他)':'spouse_misc_income',
-                '配偶者障害者手帳交付有無':'spouse_disability_certificate_existence', '配偶者障害者手帳備考':'spouse_disability_certificate_remarks',
-                '扶養親族有無':'dependents_existence', '本人障害者手帳交付有無':'user_disability_certificate_existence', '本人障害者手帳備考':'user_disability_certificate_remarks',
-                '寡婦該当確認':'widow_status', 'ひとり親該当確認':'single_parent_status', '勤労学生該当確認':'working_student_status', '災害者該当確認':'disaster_status',
+                '配偶者 給与収入金額':'spouse_salary_income', 
+                '配偶者 その他収入有無':'spouse_other_income_existence', '配偶者 年金収入':'spouse_pension_income', '配偶者 事業収入':'spouse_business_income', '配偶者 退職手当等収入':'spouse_severance_pay_income', '配偶者 その他収入':'spouse_misc_income',
+                '配偶者 障害者手帳交付有無':'spouse_disability_certificate_existence', '配偶者 障害者手帳(備考)':'spouse_disability_certificate_remarks',
+                '扶養親族有無':'dependents_existence', '本人 障害者手帳交付有無':'user_disability_certificate_existence', '本人 障害者手帳(備考)':'user_disability_certificate_remarks',
+                '寡婦該当確認':'widow_status', 'ひとり親該当確認':'single_parent_status', '勤労学生該当確認＜本人限定＞':'working_student_status', '災害者該当確認':'disaster_status',
                 '国外居住扶養親族有無':'non_resident_dependent_status', 
                 '国外居住扶養親族_親族関係書類':'non_resident_dependent_relation_file',
                 '国外居住扶養親族_送金関係書類':'non_resident_dependent_remittance_file',
@@ -1351,7 +1357,7 @@
                 '任意継続健康保険料 年間支払額':'voluntary_health_insurance_amount',
                 '任意継続健康保険料 控除証明書':'voluntary_health_insurance_file',
                 '小規模企業共済掛金等控除有無':'small_business_deduction', 
-                '住宅ローン控除有無':'housing_loan_deduction',
+                '住宅ローン控除有無（2年目以降）':'housing_loan_deduction',
                 '住宅ローン_申告書':'housing_loan_declaration_file',
                 '住宅ローン_証明書':'housing_loan_certificate_file'
             };
@@ -1441,8 +1447,8 @@
 
             const fileUrlMap = {
                 '前職源泉徴収票URL': 'previous_job_file',
-                '配偶者障害者手帳URL': 'spouse_disability_certificate_file',
-                '本人障害者手帳URL': 'user_disability_certificate_file',
+                '配偶者 障害者手帳URL': 'spouse_disability_certificate_file',
+                '本人 障害者手帳URL': 'user_disability_certificate_file',
                 '勤労学生_学生証URL': 'student_card_file',
                 '生命保険料_控除証明書URL': 'life_insurance_file',
                 '地震保険料_控除証明書URL': 'earthquake_insurance_file',
@@ -1525,55 +1531,78 @@
                         const parts = idParam.split('_');
                         clientId = parts[0]; // 前半の英数字（ID）部分のみを抽出
                         
-                        if (clientId) {
-                            // API通信を待つ間、フォームを表示し「確認中...」とする
-                            hiddenInput.value = clientId;
-                            displayInput.value = '事業者情報を取得中...';
-                            loading.classList.add('hidden'); // ローディングは消す
-                            
-                            // IDを用いてAPIから正確な事業者名を取得する
+                        let needsApiBlock = false;
+                        let decodedName = '';
+
+                        if (parts.length > 1) {
+                            displayCompanyName = parts.slice(1).join('_');
+                            try {
+                                decodedName = decodeURIComponent(displayCompanyName);
+                                const match = decodedName.match(/【(.*?)】/);
+                                if (match && match[1]) {
+                                    decodedName = match[1];
+                                }
+                            } catch(e) {
+                                // デコードエラー（URLがエンコードの途中で不自然に切れている場合）
+                                needsApiBlock = true;
+                            }
+                        } else {
+                            // _ 以降がない場合
+                            needsApiBlock = true;
+                        }
+
+                        if (needsApiBlock) {
+                            // ★ パターンB：URLが途切れている、またはデコードエラーになる場合
+                            // ローディング画面を出してAPI通信を待つ
+                            loading.classList.remove('hidden');
                             try {
                                 const response = await fetch(GAS_WEB_APP_URL, {
                                     method: 'POST',
-                                    body: JSON.stringify({
-                                        action: 'getClientNameById',
-                                        clientId: clientId,
-                                        secret: MY_SECRET_KEY
-                                    })
+                                    body: JSON.stringify({ action: 'getClientNameById', clientId: clientId, secret: MY_SECRET_KEY })
                                 });
                                 const result = await response.json();
                                 if (result.result === 'success' && result.clientName) {
-                                    displayCompanyName = result.clientName;
-                                } else {
-                                    console.warn("APIからの事業者名取得に失敗:", result.message);
+                                    decodedName = result.clientName;
                                 }
                             } catch (apiError) {
                                 console.error("事業者名取得API通信エラー:", apiError);
                             }
+                            
+                            document.getElementById('company_name_hidden').value = clientId;
+                            document.getElementById('company_name_display').value = decodedName || clientId;
+                            
+                        } else {
+                            // ★ パターンA：URLからデコードできた場合
+                            // ローディングは出さずに即時表示
+                            document.getElementById('company_name_hidden').value = clientId || displayCompanyName; 
+                            document.getElementById('company_name_display').value = decodedName;
+                            
+                            // 裏側でAPI通信し、文字の途中で切れていた場合（「株式会社テス」等）に上書き補完する
+                            fetch(GAS_WEB_APP_URL, {
+                                method: 'POST',
+                                body: JSON.stringify({ action: 'getClientNameById', clientId: clientId, secret: MY_SECRET_KEY })
+                            }).then(r => r.json()).then(res => {
+                                if (res.result === 'success' && res.clientName) {
+                                    document.getElementById('company_name_display').value = res.clientName;
+                                }
+                            }).catch(e => console.error("裏側での事業者名確認に失敗:", e));
                         }
                         
-                        // APIで取得できなかった場合、URLに日本語が含まれていればフォールバックとして使用
-                        if (!displayCompanyName && parts.length > 1) {
-                            displayCompanyName = parts.slice(1).join('_');
-                        }
                     } else if (companyNameParam) {
                         // 古いURL仕様のフォールバック
                         clientId = companyNameParam; 
-                        displayCompanyName = companyNameParam;
-                    }
-
-                    // 取得した会社名をフォームにセット（【】の中身を抽出する処理を適用）
-                    if (displayCompanyName) {
-                        let decodedName = decodeURIComponent(displayCompanyName);
-                        const match = decodedName.match(/【(.*?)】/);
-                        if (match && match[1]) {
-                            decodedName = match[1];
+                        let decodedName = "";
+                        try {
+                            decodedName = decodeURIComponent(companyNameParam);
+                            const match = decodedName.match(/【(.*?)】/);
+                            if (match && match[1]) {
+                                decodedName = match[1];
+                            }
+                        } catch(e) {
+                            decodedName = companyNameParam;
                         }
-                        displayInput.value = decodedName; 
-                        hiddenInput.value = displayCompanyName; // hiddenには元の名前をセット
-                    } else if (clientId && displayInput.value === '事業者情報を取得中...') {
-                        // 会社名部分が取得できず、確認中のままならIDを表示
-                        displayInput.value = clientId;
+                        document.getElementById('company_name_hidden').value = clientId;
+                        document.getElementById('company_name_display').value = decodedName;
                     }
 
                 } catch(e) { 
@@ -1590,7 +1619,6 @@
                     radio.dispatchEvent(new Event('change', { bubbles: true }));
                 });
                 toggleYearEndAdjustment(form.querySelector('input[name="year_end_adjustment"]:checked').value);
-                updateResidentTaxState();
                 
                 const fieldsToKana = [
                     { id: 'name_last', kanaId: 'kana_last' }, { id: 'name_first', kanaId: 'kana_first' },
