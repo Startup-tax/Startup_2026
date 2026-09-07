@@ -436,6 +436,40 @@
             '大正': { start: 1912, years: 15 }
         };
 
+        function convertToWareki(dateStr) {
+            if (!dateStr) return null;
+            const warekiMatch = dateStr.match(/^(令和|平成|昭和|大正)(元|\d+)年(\d+)月(\d+)日/);
+            if (warekiMatch) {
+                return {
+                    era: warekiMatch[1],
+                    year: warekiMatch[2] === '元' ? 1 : parseInt(warekiMatch[2], 10),
+                    month: parseInt(warekiMatch[3], 10),
+                    day: parseInt(warekiMatch[4], 10)
+                };
+            }
+            const d = new Date(dateStr);
+            if (!isNaN(d.getTime())) {
+                const year = d.getFullYear();
+                const month = d.getMonth() + 1;
+                const day = d.getDate();
+                let era = '';
+                let warekiYear = 0;
+                if (year >= 2019 && (year > 2019 || (year === 2019 && (month > 5 || (month === 5 && day >= 1))))) {
+                    era = '令和'; warekiYear = year - 2018;
+                } else if (year >= 1989 && (year > 1989 || (year === 1989 && (month > 1 || (month === 1 && day >= 8))))) {
+                    era = '平成'; warekiYear = year - 1988;
+                } else if (year >= 1926 && (year > 1926 || (year === 1926 && (month > 12 || (month === 12 && day >= 25))))) {
+                    era = '昭和'; warekiYear = year - 1925;
+                } else if (year >= 1912 && (year > 1912 || (year === 1912 && (month > 7 || (month === 7 && day >= 30))))) {
+                    era = '大正'; warekiYear = year - 1911;
+                } else {
+                    return null;
+                }
+                return { era, year: warekiYear, month, day };
+            }
+            return null;
+        }
+
         function setupWarekiDateFields(group) {
             const eraSelect = group.querySelector('.era');
             const yearSelect = group.querySelector('.year');
@@ -1119,7 +1153,7 @@
                 ['last_name_furigana', '姓フリガナ'], ['first_name_furigana', '名フリガナ'], ['birth_date', '生年月日'],
                 ['postal_code', '郵便番号'], ['address1', '住所1'], ['address2', '住所2'], 
                 ['householder_name', '世帯主の氏名'], ['householder_relationship', '世帯主の続柄'],
-                ['year_end_adjustment', '年末調整実施可否'],
+                ['year_end_adjustment', '年末調整実施確認'],
                 ['not_doing_reason', '年末調整しない理由'],
                 ['resident_tax', '住民税徴収方法'],
                 ['previous_job', '前職有無'], ['previous_job_file', '前職源泉徴収票'], 
@@ -1337,7 +1371,7 @@
             const nameAttrMap = {
                 '事業者名':'company_name', 'メールアドレス':'email_address', '姓':'last_name', '名':'first_name', '姓フリガナ':'last_name_furigana', '名フリガナ':'first_name_furigana',
                 '郵便番号':'postal_code', '住所1':'address1', '住所2':'address2', '世帯主の氏名':'householder_name', '世帯主の続柄':'householder_relationship',
-                '年末調整実施可否':'year_end_adjustment', '年末調整しない理由':'not_doing_reason', '前職有無':'previous_job', 'その他収入有無':'other_income_existence', '本人年金収入':'user_pension_income', '本人事業収入':'user_business_income', '本人退職手当等収入':'user_severance_pay_income', '本人その他収入':'user_misc_income', '住民税徴収方法':'resident_tax',
+                '年末調整実施確認':'year_end_adjustment', '年末調整しない理由':'not_doing_reason', '前職有無':'previous_job', 'その他収入有無':'other_income_existence', '本人年金収入':'user_pension_income', '本人事業収入':'user_business_income', '本人退職手当等収入':'user_severance_pay_income', '本人その他収入':'user_misc_income', '住民税徴収方法':'resident_tax',
                 '配偶者有無':'spouse_existence', '配偶者姓':'spouse_last_name', '配偶者名':'spouse_first_name', '配偶者姓フリガナ':'spouse_last_name_furigana', '配偶者名フリガナ':'spouse_first_name_furigana',
                 '配偶者住所1':'spouse_address1', '配偶者住所2':'spouse_address2', '配偶者_住所同じ':'spouse_address_same_as_user',
                 '配偶者_給与収入金額':'spouse_salary_income', 
@@ -1381,13 +1415,6 @@
                 if (name === 'company_name') {
                     const fullCompanyName = data[header];
                     document.getElementById('company_name_hidden').value = fullCompanyName;
-                    
-                    let displayName = fullCompanyName;
-                    const match = fullCompanyName.match(/【(.*?)】/);
-                    if (match && match[1]) {
-                        displayName = match[1];
-                    }
-                    document.getElementById('company_name_display').value = displayName;
                     return; 
                 }
                 
@@ -1414,19 +1441,17 @@
             Object.keys(dateHeaders).forEach(header => {
                 const dateString = data[header];
                 if (dateString) {
-                    const match = dateString.match(/^(令和|平成|昭和)(元|\d+)年(\d+)月(\d+)日$/);
-                    if (match) {
-                        const [, era, yearText, month, day] = match;
-                        const year = yearText === '元' ? 1 : parseInt(yearText, 10);
+                    const parsedDate = convertToWareki(dateString);
+                    if (parsedDate) {
                         const group = document.querySelector(`.date-select-group[data-prefix="${dateHeaders[header]}"]`);
                         if (group) {
                             const eraSelect = group.querySelector('.era');
-                            eraSelect.value = era;
+                            eraSelect.value = parsedDate.era;
                             eraSelect.dispatchEvent(new Event('change'));
                             setTimeout(() => {
-                                group.querySelector('.year').value = year;
-                                group.querySelector('.month').value = month;
-                                group.querySelector('.day').value = day;
+                                group.querySelector('.year').value = parsedDate.year;
+                                group.querySelector('.month').value = parsedDate.month;
+                                group.querySelector('.day').value = parsedDate.day;
                             }, 100);
                         }
                     }
@@ -1504,8 +1529,6 @@
                 try {
                     const params = new URLSearchParams(window.location.search);
                     const editId = params.get('editId');
-                    
-                    // ハイブリッドパラメータ（?id=clientId_clientName）の取得
                     const idParam = params.get('id');
                     const companyNameParam = params.get('company'); // 互換性のため古いパラメータも確認
 
@@ -1521,34 +1544,24 @@
 
                     // URLから会社名とIDを処理
                     let clientId = '';
+                    let fallbackName = '';
 
                     if (idParam) {
-                        // 1. 直ちに「事業者情報を取得中...」をセットしてブラウザのキャッシュ残骸などを強制上書き
-                        document.getElementById('company_name_display').value = '事業者情報を取得中...';
-
                         const parts = idParam.split('_');
                         clientId = parts[0]; 
-                        document.getElementById('company_name_hidden').value = clientId;
-                        
-                        // 4. 万が一のAPIエラー時のフォールバック用にデコードを試みる
-                        let fallbackName = clientId;
-                        if (parts.length > 1) {
-                            const rawDisplayName = parts.slice(1).join('_');
-                            try {
-                                let decoded = decodeURIComponent(rawDisplayName);
-                                const match = decoded.match(/【(.*?)】/);
-                                if (match && match[1]) {
-                                    fallbackName = match[1];
-                                } else {
-                                    fallbackName = decoded;
-                                }
-                            } catch(e) {
-                                // デコード失敗時はclientIdをそのままフォールバックにする
-                            }
-                        }
+                        fallbackName = decodeURIComponent(parts.slice(1).join('_') || clientId);
+                    } else if (companyNameParam) {
+                        clientId = companyNameParam; 
+                        fallbackName = decodeURIComponent(companyNameParam);
+                    } else if (editId) {
+                        clientId = document.getElementById('company_name_hidden').value;
+                        fallbackName = clientId;
+                    }
 
-                        // 2. 常にローディング画面を出し、API通信を待機する
-                        // loading.classList.remove('hidden'); // ★要件に基づき削除（バックグラウンド通信化）
+                    if (clientId) {
+                        document.getElementById('company_name_hidden').value = clientId;
+                        document.getElementById('company_name_display').value = '事業者情報を取得中...';
+                        
                         try {
                             const response = await fetch(GAS_WEB_APP_URL, {
                                 method: 'POST',
@@ -1556,34 +1569,31 @@
                             });
                             const result = await response.json();
                             
-                            // 3. 通信が成功したら正しい事業者名で上書き
                             if (result.result === 'success' && result.clientName) {
                                 document.getElementById('company_name_display').value = result.clientName;
                             } else {
                                 // APIからの取得に失敗した場合のフォールバック
-                                document.getElementById('company_name_display').value = fallbackName;
+                                let decoded = fallbackName;
+                                try {
+                                    const match = decoded.match(/【(.*?)】/);
+                                    if (match && match[1]) {
+                                        decoded = match[1];
+                                    }
+                                } catch(e) {}
+                                document.getElementById('company_name_display').value = decoded;
                             }
                         } catch (apiError) {
                             console.error("事業者名取得API通信エラー:", apiError);
                             // ネットワークエラー時のフォールバック
-                            document.getElementById('company_name_display').value = fallbackName;
+                            let decoded = fallbackName;
+                            try {
+                                const match = decoded.match(/【(.*?)】/);
+                                if (match && match[1]) {
+                                    decoded = match[1];
+                                }
+                            } catch(e) {}
+                            document.getElementById('company_name_display').value = decoded;
                         }
-                        
-                    } else if (companyNameParam) {
-                        // 古いURL仕様のフォールバック
-                        clientId = companyNameParam; 
-                        let decodedName = "";
-                        try {
-                            decodedName = decodeURIComponent(companyNameParam);
-                            const match = decodedName.match(/【(.*?)】/);
-                            if (match && match[1]) {
-                                decodedName = match[1];
-                            }
-                        } catch(e) {
-                            decodedName = companyNameParam;
-                        }
-                        document.getElementById('company_name_hidden').value = clientId;
-                        document.getElementById('company_name_display').value = decodedName;
                     }
 
                 } catch(e) { 
