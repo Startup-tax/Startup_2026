@@ -1528,7 +1528,7 @@
                         if (clientId) {
                             // API通信を待つ間、フォームを表示し「確認中...」とする
                             hiddenInput.value = clientId;
-                            displayInput.value = '事業者情報を取得中...';
+                            displayInput.value = '事業者情報を確認中...';
                             loading.classList.add('hidden'); // ローディングは消す
                             
                             // IDを用いてAPIから正確な事業者名を取得する
@@ -1571,7 +1571,7 @@
                         }
                         displayInput.value = decodedName; 
                         hiddenInput.value = displayCompanyName; // hiddenには元の名前をセット
-                    } else if (clientId && displayInput.value === '事業者情報を取得中...') {
+                    } else if (clientId && displayInput.value === '事業者情報を確認中...') {
                         // 会社名部分が取得できず、確認中のままならIDを表示
                         displayInput.value = clientId;
                     }
