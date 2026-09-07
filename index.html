@@ -1548,7 +1548,7 @@
                         }
 
                         // 2. 常にローディング画面を出し、API通信を待機する
-                        loading.classList.remove('hidden');
+                        // loading.classList.remove('hidden'); // ★要件に基づき削除（バックグラウンド通信化）
                         try {
                             const response = await fetch(GAS_WEB_APP_URL, {
                                 method: 'POST',
