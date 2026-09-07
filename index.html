@@ -1523,65 +1523,50 @@
                     let clientId = '';
 
                     if (idParam) {
+                        // 1. 直ちに「事業者情報を取得中...」をセットしてブラウザのキャッシュ残骸などを強制上書き
+                        document.getElementById('company_name_display').value = '事業者情報を取得中...';
+
                         const parts = idParam.split('_');
                         clientId = parts[0]; 
+                        document.getElementById('company_name_hidden').value = clientId;
                         
-                        let needsApiBlock = false;
-                        let decodedName = '';
-                        let displayCompanyName = '';
-
+                        // 4. 万が一のAPIエラー時のフォールバック用にデコードを試みる
+                        let fallbackName = clientId;
                         if (parts.length > 1) {
-                            displayCompanyName = parts.slice(1).join('_');
+                            const rawDisplayName = parts.slice(1).join('_');
                             try {
-                                decodedName = decodeURIComponent(displayCompanyName);
-                                const match = decodedName.match(/【(.*?)】/);
+                                let decoded = decodeURIComponent(rawDisplayName);
+                                const match = decoded.match(/【(.*?)】/);
                                 if (match && match[1]) {
-                                    decodedName = match[1];
+                                    fallbackName = match[1];
+                                } else {
+                                    fallbackName = decoded;
                                 }
                             } catch(e) {
-                                // デコードエラー（URLがエンコードの途中で不自然に切れている場合）
-                                needsApiBlock = true;
+                                // デコード失敗時はclientIdをそのままフォールバックにする
                             }
-                        } else {
-                            // _ 以降がない場合
-                            needsApiBlock = true;
                         }
 
-                        if (needsApiBlock) {
-                            // ★ パターンB：URLが途切れている、またはデコードエラーになる場合
-                            // ローディング画面を出してAPI通信を待つ
-                            loading.classList.remove('hidden');
-                            try {
-                                const response = await fetch(GAS_WEB_APP_URL, {
-                                    method: 'POST',
-                                    body: JSON.stringify({ action: 'getClientNameById', clientId: clientId, secret: MY_SECRET_KEY })
-                                });
-                                const result = await response.json();
-                                if (result.result === 'success' && result.clientName) {
-                                    decodedName = result.clientName;
-                                }
-                            } catch (apiError) {
-                                console.error("事業者名取得API通信エラー:", apiError);
-                            }
-                            
-                            document.getElementById('company_name_hidden').value = clientId;
-                            document.getElementById('company_name_display').value = decodedName || clientId;
-                            
-                        } else {
-                            // ★ パターンA：URLからデコードできた場合
-                            // ローディングは出さずに即時表示
-                            document.getElementById('company_name_hidden').value = clientId || displayCompanyName; 
-                            document.getElementById('company_name_display').value = decodedName;
-                            
-                            // 裏側でAPI通信し、文字の途中で切れていた場合（「株式会社テス」等）に上書き補完する
-                            fetch(GAS_WEB_APP_URL, {
+                        // 2. 常にローディング画面を出し、API通信を待機する
+                        loading.classList.remove('hidden');
+                        try {
+                            const response = await fetch(GAS_WEB_APP_URL, {
                                 method: 'POST',
                                 body: JSON.stringify({ action: 'getClientNameById', clientId: clientId, secret: MY_SECRET_KEY })
-                            }).then(r => r.json()).then(res => {
-                                if (res.result === 'success' && res.clientName) {
-                                    document.getElementById('company_name_display').value = res.clientName;
-                                }
-                            }).catch(e => console.error("裏側での事業者名確認に失敗:", e));
+                            });
+                            const result = await response.json();
+                            
+                            // 3. 通信が成功したら正しい事業者名で上書き
+                            if (result.result === 'success' && result.clientName) {
+                                document.getElementById('company_name_display').value = result.clientName;
+                            } else {
+                                // APIからの取得に失敗した場合のフォールバック
+                                document.getElementById('company_name_display').value = fallbackName;
+                            }
+                        } catch (apiError) {
+                            console.error("事業者名取得API通信エラー:", apiError);
+                            // ネットワークエラー時のフォールバック
+                            document.getElementById('company_name_display').value = fallbackName;
                         }
                         
                     } else if (companyNameParam) {
