@@ -1027,7 +1027,7 @@
                 input.value = input.value.replace(/,/g, '');
             });
 
-            // 一時的にdisabledを解除
+            // 一時的にdisabledを解除 (バリデーション前に解除すると、非表示項目の必須チェックに引っかかる可能性があるため、本来はバリデーション後にやるべきですが、既存ロジックを尊重します。もしhidden要素にrequiredがついているとここでエラーになるので注意が必要です。現状のHTMLを見る限り、hiddenの可能性がある要素でrequiredが付いているのは給与収入金額などで、これらは表示時のみrequiredが有効になるようにすべきですが、今回は既存ロジックの修正に留めます。)
             const disabledElements = Array.from(form.querySelectorAll('[disabled]'));
             disabledElements.forEach(el => el.disabled = false);
 
@@ -1039,7 +1039,7 @@
                 form.querySelectorAll('.currency-input').forEach(input => {
                     if(input.value) input.value = Number(input.value).toLocaleString('ja-JP');
                 });
-
+                
                 // ★修正箇所：バリデーション失敗時にも、disabledとreadonlyを元に戻す
                 readOnlyElements.forEach(el => el.readOnly = true);
                 disabledElements.forEach(el => el.disabled = true);
@@ -1338,14 +1338,14 @@
             const nameAttrMap = {
                 '事業者名':'company_name', 'メールアドレス':'email_address', '姓':'last_name', '名':'first_name', '姓フリガナ':'last_name_furigana', '名フリガナ':'first_name_furigana',
                 '郵便番号':'postal_code', '住所1':'address1', '住所2':'address2', '世帯主の氏名':'householder_name', '世帯主の続柄':'householder_relationship',
-                '年末調整実施確認':'year_end_adjustment', '年末調整しない理由':'not_doing_reason', '前職有無':'previous_job', 'その他収入有無':'other_income_existence', '本人年金収入':'user_pension_income', '本人事業収入':'user_business_income', '本人退職手当等収入':'user_severance_pay_income', '本人その他収入':'user_misc_income', '住民税徴収方法':'resident_tax',
+                '年末調整実施可否':'year_end_adjustment', '年末調整しない理由':'not_doing_reason', '前職有無':'previous_job', 'その他収入有無':'other_income_existence', '本人年金収入':'user_pension_income', '本人事業収入':'user_business_income', '本人退職手当等収入':'user_severance_pay_income', '本人その他収入':'user_misc_income', '住民税徴収方法':'resident_tax',
                 '配偶者有無':'spouse_existence', '配偶者姓':'spouse_last_name', '配偶者名':'spouse_first_name', '配偶者姓フリガナ':'spouse_last_name_furigana', '配偶者名フリガナ':'spouse_first_name_furigana',
                 '配偶者住所1':'spouse_address1', '配偶者住所2':'spouse_address2', '配偶者_住所同じ':'spouse_address_same_as_user',
-                '配偶者 給与収入金額':'spouse_salary_income', 
-                '配偶者 その他収入有無':'spouse_other_income_existence', '配偶者 年金収入':'spouse_pension_income', '配偶者 事業収入':'spouse_business_income', '配偶者 退職手当等収入':'spouse_severance_pay_income', '配偶者 その他収入':'spouse_misc_income',
-                '配偶者 障害者手帳交付有無':'spouse_disability_certificate_existence', '配偶者 障害者手帳(備考)':'spouse_disability_certificate_remarks',
-                '扶養親族有無':'dependents_existence', '本人 障害者手帳交付有無':'user_disability_certificate_existence', '本人 障害者手帳(備考)':'user_disability_certificate_remarks',
-                '寡婦該当確認':'widow_status', 'ひとり親該当確認':'single_parent_status', '勤労学生該当確認＜本人限定＞':'working_student_status', '災害者該当確認':'disaster_status',
+                '配偶者_給与収入金額':'spouse_salary_income', 
+                '配偶者その他収入有無':'spouse_other_income_existence', '配偶者_年金収入金額':'spouse_pension_income', '配偶者_事業収入金額':'spouse_business_income', '配偶者_退職手当等収入金額':'spouse_severance_pay_income', '配偶者_その他収入金額(その他)':'spouse_misc_income',
+                '配偶者障害者手帳交付有無':'spouse_disability_certificate_existence', '配偶者障害者手帳備考':'spouse_disability_certificate_remarks',
+                '扶養親族有無':'dependents_existence', '本人障害者手帳交付有無':'user_disability_certificate_existence', '本人障害者手帳備考':'user_disability_certificate_remarks',
+                '寡婦該当確認':'widow_status', 'ひとり親該当確認':'single_parent_status', '勤労学生該当確認':'working_student_status', '災害者該当確認':'disaster_status',
                 '国外居住扶養親族有無':'non_resident_dependent_status', 
                 '国外居住扶養親族_親族関係書類':'non_resident_dependent_relation_file',
                 '国外居住扶養親族_送金関係書類':'non_resident_dependent_remittance_file',
@@ -1357,7 +1357,7 @@
                 '任意継続健康保険料 年間支払額':'voluntary_health_insurance_amount',
                 '任意継続健康保険料 控除証明書':'voluntary_health_insurance_file',
                 '小規模企業共済掛金等控除有無':'small_business_deduction', 
-                '住宅ローン控除有無（2年目以降）':'housing_loan_deduction',
+                '住宅ローン控除有無':'housing_loan_deduction',
                 '住宅ローン_申告書':'housing_loan_declaration_file',
                 '住宅ローン_証明書':'housing_loan_certificate_file'
             };
@@ -1447,8 +1447,8 @@
 
             const fileUrlMap = {
                 '前職源泉徴収票URL': 'previous_job_file',
-                '配偶者 障害者手帳URL': 'spouse_disability_certificate_file',
-                '本人 障害者手帳URL': 'user_disability_certificate_file',
+                '配偶者障害者手帳URL': 'spouse_disability_certificate_file',
+                '本人障害者手帳URL': 'user_disability_certificate_file',
                 '勤労学生_学生証URL': 'student_card_file',
                 '生命保険料_控除証明書URL': 'life_insurance_file',
                 '地震保険料_控除証明書URL': 'earthquake_insurance_file',
