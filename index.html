@@ -1474,35 +1474,27 @@
                 }
             });
 
-            // ▼修正: 生年月日のバインディングでsetTimeoutを外し、同期的にセットするように変更
+            // ▼修正: 生年月日のバインディングでsetTimeoutを復活させる
             const dateHeaders = {'生年月日':'user', '配偶者生年月日':'spouse'};
             for(let i=1; i<=6; i++) { dateHeaders[`扶養親族${i}_生年月日`] = `dependent_${i}`; }
             Object.keys(dateHeaders).forEach(header => {
                 const dateString = data[header];
                 if (dateString) {
+                    // パース処理を呼び出す
                     const parsedDate = convertToWareki(dateString);
                     if (parsedDate) {
                         const group = document.querySelector(`.date-select-group[data-prefix="${dateHeaders[header]}"]`);
                         if (group) {
                             const eraSelect = group.querySelector('.era');
-                            const yearSelect = group.querySelector('.year');
-                            const monthSelect = group.querySelector('.month');
-                            const daySelect = group.querySelector('.day');
-                            
                             eraSelect.value = parsedDate.era;
-                            // 手動でchangeイベントを発火させ、年の選択肢を同期的に構築させる
                             eraSelect.dispatchEvent(new Event('change'));
                             
-                            // 選択肢が構築された直後に同期的に値をセットする
-                            const yearStr = parsedDate.year.toString();
-                            for (let i = 0; i < yearSelect.options.length; i++) {
-                                if (yearSelect.options[i].value === yearStr) {
-                                    yearSelect.selectedIndex = i;
-                                    break;
-                                }
-                            }
-                            monthSelect.value = parsedDate.month.toString();
-                            daySelect.value = parsedDate.day.toString();
+                            // 動的生成を待つために setTimeout で遅延セットする（重要）
+                            setTimeout(() => {
+                                group.querySelector('.year').value = parsedDate.year;
+                                group.querySelector('.month').value = parsedDate.month;
+                                group.querySelector('.day').value = parsedDate.day;
+                            }, 100);
                         }
                     }
                 }
