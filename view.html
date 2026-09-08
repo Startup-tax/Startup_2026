@@ -218,32 +218,47 @@
         const MY_SECRET_KEY = "StartupTax-Secret-Key-vB9^YWLiVoSW6y5"; // セキュリティー用
         let submissionId = null;
 
+        // ▼修正: 表示用の日付パース処理も堅牢化
         function formatDateString(dateStr) {
             if (!dateStr) return '';
+            
+            // 既に和暦の文字列の場合
             const warekiMatch = dateStr.match(/^(令和|平成|昭和|大正)(元|\d+)年(\d+)月(\d+)日/);
             if (warekiMatch) return dateStr;
             
-            const d = new Date(dateStr);
-            if (!isNaN(d.getTime())) {
-                const year = d.getFullYear();
-                const month = d.getMonth() + 1;
-                const day = d.getDate();
-                let era = '';
-                let warekiYear = 0;
-                if (year >= 2019 && (year > 2019 || (year === 2019 && (month > 5 || (month === 5 && day >= 1))))) {
-                    era = '令和'; warekiYear = year - 2018;
-                } else if (year >= 1989 && (year > 1989 || (year === 1989 && (month > 1 || (month === 1 && day >= 8))))) {
-                    era = '平成'; warekiYear = year - 1988;
-                } else if (year >= 1926 && (year > 1926 || (year === 1926 && (month > 12 || (month === 12 && day >= 25))))) {
-                    era = '昭和'; warekiYear = year - 1925;
-                } else if (year >= 1912 && (year > 1912 || (year === 1912 && (month > 7 || (month === 7 && day >= 30))))) {
-                    era = '大正'; warekiYear = year - 1911;
+            // 西暦の抽出 (YYYY/MM/DD, YYYY-MM-DD 等)
+            let year, month, day;
+            const seirekiMatch = String(dateStr).match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+            if (seirekiMatch) {
+                year = parseInt(seirekiMatch[1], 10);
+                month = parseInt(seirekiMatch[2], 10);
+                day = parseInt(seirekiMatch[3], 10);
+            } else {
+                // その他の形式の場合 Date オブジェクトで試す
+                const d = new Date(dateStr);
+                if (!isNaN(d.getTime())) {
+                    year = d.getFullYear();
+                    month = d.getMonth() + 1;
+                    day = d.getDate();
                 } else {
-                    return `${year}年${month}月${day}日`;
+                    return dateStr;
                 }
-                return `${era}${warekiYear === 1 ? '元' : warekiYear}年${month}月${day}日`;
             }
-            return dateStr;
+
+            let era = '';
+            let warekiYear = 0;
+            if (year > 2019 || (year === 2019 && (month > 5 || (month === 5 && day >= 1)))) {
+                era = '令和'; warekiYear = year - 2018;
+            } else if (year > 1989 || (year === 1989 && (month > 1 || (month === 1 && day >= 8)))) {
+                era = '平成'; warekiYear = year - 1988;
+            } else if (year > 1926 || (year === 1926 && (month > 12 || (month === 12 && day >= 25)))) {
+                era = '昭和'; warekiYear = year - 1925;
+            } else if (year > 1912 || (year === 1912 && (month > 7 || (month === 7 && day >= 30)))) {
+                era = '大正'; warekiYear = year - 1911;
+            } else {
+                return `${year}年${month}月${day}日`;
+            }
+            return `${era}${warekiYear === 1 ? '元' : warekiYear}年${month}月${day}日`;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -495,7 +510,9 @@
                 message.textContent = `エラー: ${error.message}`;
                 console.error('Fetch Error:', error);
             } finally {
+                // ▼修正: ロード完了時にローディングを消し、さらに強制的に一番上へスクロールさせる
                 loading.classList.add('hidden');
+                window.scrollTo(0, 0);
             }
         }
 

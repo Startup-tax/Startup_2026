@@ -418,7 +418,6 @@
     <script src="https://unpkg.com/wanakana"></script>
     
     <script>
-        // ★★★ 令和8年用の新しいGAS WebアプリURLに書き換えてください ★★★
         const GAS_WEB_APP_URL = 'https://script.google.com/a/macros/tax-startup.com/s/AKfycbxSIgc5YqpXhgy-7D26FI-A9iv5ZdOE6WyU0JYvMIkHbXwr9CJ_gfmzEx8smxoi9hFKyw/exec';
         const MY_SECRET_KEY = "StartupTax-Secret-Key-vB9^YWLiVoSW6y5"; // セキュリティー用
         const form = document.getElementById('main-form');
@@ -436,8 +435,11 @@
             '大正': { start: 1912, years: 15 }
         };
 
+        // ▼修正: 西暦の文字列形式（YYYY/MM/DD や YYYY-MM-DD）も堅牢にパースして和暦に変換する
         function convertToWareki(dateStr) {
             if (!dateStr) return null;
+            
+            // 既に和暦の文字列の場合
             const warekiMatch = dateStr.match(/^(令和|平成|昭和|大正)(元|\d+)年(\d+)月(\d+)日/);
             if (warekiMatch) {
                 return {
@@ -447,27 +449,41 @@
                     day: parseInt(warekiMatch[4], 10)
                 };
             }
-            const d = new Date(dateStr);
-            if (!isNaN(d.getTime())) {
-                const year = d.getFullYear();
-                const month = d.getMonth() + 1;
-                const day = d.getDate();
-                let era = '';
-                let warekiYear = 0;
-                if (year >= 2019 && (year > 2019 || (year === 2019 && (month > 5 || (month === 5 && day >= 1))))) {
-                    era = '令和'; warekiYear = year - 2018;
-                } else if (year >= 1989 && (year > 1989 || (year === 1989 && (month > 1 || (month === 1 && day >= 8))))) {
-                    era = '平成'; warekiYear = year - 1988;
-                } else if (year >= 1926 && (year > 1926 || (year === 1926 && (month > 12 || (month === 12 && day >= 25))))) {
-                    era = '昭和'; warekiYear = year - 1925;
-                } else if (year >= 1912 && (year > 1912 || (year === 1912 && (month > 7 || (month === 7 && day >= 30))))) {
-                    era = '大正'; warekiYear = year - 1911;
+            
+            // 西暦の抽出 (YYYY/MM/DD, YYYY-MM-DD, または YYYY/MM/DD 0:00:00 等)
+            let year, month, day;
+            const seirekiMatch = String(dateStr).match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+            if (seirekiMatch) {
+                year = parseInt(seirekiMatch[1], 10);
+                month = parseInt(seirekiMatch[2], 10);
+                day = parseInt(seirekiMatch[3], 10);
+            } else {
+                // 上記にマッチしない場合は標準のDateに投げてみる
+                const d = new Date(dateStr);
+                if (!isNaN(d.getTime())) {
+                    year = d.getFullYear();
+                    month = d.getMonth() + 1;
+                    day = d.getDate();
                 } else {
                     return null;
                 }
-                return { era, year: warekiYear, month, day };
             }
-            return null;
+
+            let era = '';
+            let warekiYear = 0;
+            // 和暦の判定ロジック
+            if (year > 2019 || (year === 2019 && (month > 5 || (month === 5 && day >= 1)))) {
+                era = '令和'; warekiYear = year - 2018;
+            } else if (year > 1989 || (year === 1989 && (month > 1 || (month === 1 && day >= 8)))) {
+                era = '平成'; warekiYear = year - 1988;
+            } else if (year > 1926 || (year === 1926 && (month > 12 || (month === 12 && day >= 25)))) {
+                era = '昭和'; warekiYear = year - 1925;
+            } else if (year > 1912 || (year === 1912 && (month > 7 || (month === 7 && day >= 30)))) {
+                era = '大正'; warekiYear = year - 1911;
+            } else {
+                return null;
+            }
+            return { era, year: warekiYear, month, day };
         }
 
         function setupWarekiDateFields(group) {
@@ -540,15 +556,14 @@
             updateResidentTaxState();
         }
 
+        // ▼修正: データ読み込み時に意図しないスクロールが発生する原因のscrollIntoViewを削除
         function toggleMainSections(value) {
             const show = value === 'はい';
             mainSectionsContainer.classList.toggle('hidden', !show);
             mainSectionsContainer.querySelectorAll('input, select, button, textarea').forEach(input => {
                 input.disabled = !show;
             });
-            if (!show) {
-                document.getElementById('submit-button-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+            // スクロール処理を削除
         }
 
         function handleNotDoingReasonChange(value) {
@@ -1436,6 +1451,7 @@
                 }
             });
 
+            // ▼修正: 生年月日のバインディングでsetTimeoutを外し、同期的にセットするように変更
             const dateHeaders = {'生年月日':'user', '配偶者生年月日':'spouse'};
             for(let i=1; i<=6; i++) { dateHeaders[`扶養親族${i}_生年月日`] = `dependent_${i}`; }
             Object.keys(dateHeaders).forEach(header => {
@@ -1446,13 +1462,18 @@
                         const group = document.querySelector(`.date-select-group[data-prefix="${dateHeaders[header]}"]`);
                         if (group) {
                             const eraSelect = group.querySelector('.era');
+                            const yearSelect = group.querySelector('.year');
+                            const monthSelect = group.querySelector('.month');
+                            const daySelect = group.querySelector('.day');
+                            
                             eraSelect.value = parsedDate.era;
+                            // 手動でchangeイベントを発火させ、年の選択肢を構築させる
                             eraSelect.dispatchEvent(new Event('change'));
-                            setTimeout(() => {
-                                group.querySelector('.year').value = parsedDate.year;
-                                group.querySelector('.month').value = parsedDate.month;
-                                group.querySelector('.day').value = parsedDate.day;
-                            }, 100);
+                            
+                            // 選択肢が構築された直後に同期的に値をセットする
+                            yearSelect.value = parsedDate.year;
+                            monthSelect.value = parsedDate.month;
+                            daySelect.value = parsedDate.day;
                         }
                     }
                 }
@@ -1599,8 +1620,9 @@
                 } catch(e) { 
                     console.error("URLパラメータ処理・API通信エラー:", e); 
                 } finally {
-                    // API通信等も含めて初期処理が完了したらローディングを確実に非表示にする
+                    // ▼修正: ロード完了時にローディングを消し、さらに強制的に一番上へスクロールさせる
                     loading.classList.add('hidden');
+                    window.scrollTo(0, 0);
                 }
                 
                 document.querySelectorAll('.date-select-group').forEach(setupWarekiDateFields);
