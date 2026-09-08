@@ -218,6 +218,34 @@
         const MY_SECRET_KEY = "StartupTax-Secret-Key-vB9^YWLiVoSW6y5"; // セキュリティー用
         let submissionId = null;
 
+        function formatDateString(dateStr) {
+            if (!dateStr) return '';
+            const warekiMatch = dateStr.match(/^(令和|平成|昭和|大正)(元|\d+)年(\d+)月(\d+)日/);
+            if (warekiMatch) return dateStr;
+            
+            const d = new Date(dateStr);
+            if (!isNaN(d.getTime())) {
+                const year = d.getFullYear();
+                const month = d.getMonth() + 1;
+                const day = d.getDate();
+                let era = '';
+                let warekiYear = 0;
+                if (year >= 2019 && (year > 2019 || (year === 2019 && (month > 5 || (month === 5 && day >= 1))))) {
+                    era = '令和'; warekiYear = year - 2018;
+                } else if (year >= 1989 && (year > 1989 || (year === 1989 && (month > 1 || (month === 1 && day >= 8))))) {
+                    era = '平成'; warekiYear = year - 1988;
+                } else if (year >= 1926 && (year > 1926 || (year === 1926 && (month > 12 || (month === 12 && day >= 25))))) {
+                    era = '昭和'; warekiYear = year - 1925;
+                } else if (year >= 1912 && (year > 1912 || (year === 1912 && (month > 7 || (month === 7 && day >= 30))))) {
+                    era = '大正'; warekiYear = year - 1911;
+                } else {
+                    return `${year}年${month}月${day}日`;
+                }
+                return `${era}${warekiYear === 1 ? '元' : warekiYear}年${month}月${day}日`;
+            }
+            return dateStr;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
             submissionId = params.get('id');
@@ -255,6 +283,31 @@
                 }
                 
                 const data = result.data;
+
+                // ▼IDだった場合にAPI経由で事業者名を解決する処理を追加
+                let companyDisplayName = data['事業者名'] || '';
+                if (companyDisplayName) {
+                    try {
+                        const nameResponse = await fetch(GAS_WEB_APP_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({ action: 'getClientNameById', clientId: companyDisplayName, secret: MY_SECRET_KEY })
+                        });
+                        const nameResult = await nameResponse.json();
+                        if (nameResult.result === 'success' && nameResult.clientName) {
+                            companyDisplayName = nameResult.clientName;
+                        } else {
+                            const match = companyDisplayName.match(/【(.*?)】/);
+                            if (match && match[1]) {
+                                companyDisplayName = match[1];
+                            }
+                        }
+                    } catch (e) {
+                        const match = companyDisplayName.match(/【(.*?)】/);
+                        if (match && match[1]) {
+                            companyDisplayName = match[1];
+                        }
+                    }
+                }
 
                 const addRow = (parent, label, value, urlKey) => {
                     const rowDiv = document.createElement('div');
@@ -315,7 +368,12 @@
                         }
                         
                         // 2. 値を取得
-                        const value = field.key ? data[field.key] : (field.value !== undefined ? field.value : '');
+                        let value = field.key ? data[field.key] : (field.value !== undefined ? field.value : '');
+                        
+                        // ▼生年月日のフォーマット処理
+                        if (field.key && field.key.includes('生年月日')) {
+                            value = formatDateString(value);
+                        }
 
                         // 3. 項目が空かどうかに関わらず、addRow関数を呼び出す
                         addRow(contentDiv, field.label, value, field.urlKey);
@@ -332,12 +390,6 @@
                         dataContainer.appendChild(sectionDiv);
                     }
                 };
-                
-                let companyDisplayName = data['事業者名'] || '';
-                const match = companyDisplayName.match(/【(.*?)】/);
-                if (match && match[1]) {
-                    companyDisplayName = match[1];
-                }
                 
                 createSection('ご本人情報', [
                     { label: '回答日時', key: 'タイムスタンプ' }, { label: '回答ID', key: '回答ID' },
