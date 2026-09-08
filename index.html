@@ -418,6 +418,7 @@
     <script src="https://unpkg.com/wanakana"></script>
     
     <script>
+        // ★★★ 令和8年用の新しいGAS WebアプリURLに書き換えてください ★★★
         const GAS_WEB_APP_URL = 'https://script.google.com/a/macros/tax-startup.com/s/AKfycbxSIgc5YqpXhgy-7D26FI-A9iv5ZdOE6WyU0JYvMIkHbXwr9CJ_gfmzEx8smxoi9hFKyw/exec';
         const MY_SECRET_KEY = "StartupTax-Secret-Key-vB9^YWLiVoSW6y5"; // セキュリティー用
         const form = document.getElementById('main-form');
@@ -435,43 +436,57 @@
             '大正': { start: 1912, years: 15 }
         };
 
-        // ▼修正: 西暦の文字列形式（YYYY/MM/DD や YYYY-MM-DD）も堅牢にパースして和暦に変換する
-        function convertToWareki(dateStr) {
-            if (!dateStr) return null;
-            
-            // 既に和暦の文字列の場合
-            const warekiMatch = dateStr.match(/^(令和|平成|昭和|大正)(元|\d+)年(\d+)月(\d+)日/);
-            if (warekiMatch) {
-                return {
-                    era: warekiMatch[1],
-                    year: warekiMatch[2] === '元' ? 1 : parseInt(warekiMatch[2], 10),
-                    month: parseInt(warekiMatch[3], 10),
-                    day: parseInt(warekiMatch[4], 10)
-                };
-            }
-            
-            // 西暦の抽出 (YYYY/MM/DD, YYYY-MM-DD, または YYYY/MM/DD 0:00:00 等)
+        // ▼修正: 生年月日の和暦パース処理を堅牢化し、Object/文字列いずれの形式にも対応
+        function convertToWareki(input) {
+            if (!input) return null;
+
             let year, month, day;
-            const seirekiMatch = String(dateStr).match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
-            if (seirekiMatch) {
-                year = parseInt(seirekiMatch[1], 10);
-                month = parseInt(seirekiMatch[2], 10);
-                day = parseInt(seirekiMatch[3], 10);
-            } else {
-                // 上記にマッチしない場合は標準のDateに投げてみる
-                const d = new Date(dateStr);
-                if (!isNaN(d.getTime())) {
-                    year = d.getFullYear();
-                    month = d.getMonth() + 1;
-                    day = d.getDate();
-                } else {
-                    return null;
+
+            // 1. input が Date オブジェクトの場合
+            if (Object.prototype.toString.call(input) === '[object Date]') {
+                if (isNaN(input.getTime())) return null;
+                year = input.getFullYear();
+                month = input.getMonth() + 1;
+                day = input.getDate();
+            } 
+            // 2. input が 文字列 の場合
+            else if (typeof input === 'string') {
+                // 和暦文字列パターン (例: 令和2年5月10日, 平成元年12月3日)
+                const warekiMatch = input.match(/^(令和|平成|昭和|大正)(元|\d+)年(\d{1,2})月(\d{1,2})日/);
+                if (warekiMatch) {
+                    return {
+                        era: warekiMatch[1],
+                        year: warekiMatch[2] === '元' ? 1 : parseInt(warekiMatch[2], 10),
+                        month: parseInt(warekiMatch[3], 10),
+                        day: parseInt(warekiMatch[4], 10)
+                    };
                 }
+
+                // 西暦文字列パターン (例: 1992/6/6, 1992-06-06)
+                const seirekiMatch = input.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+                if (seirekiMatch) {
+                    year = parseInt(seirekiMatch[1], 10);
+                    month = parseInt(seirekiMatch[2], 10);
+                    day = parseInt(seirekiMatch[3], 10);
+                } else {
+                    // それ以外の場合はDateでパースを試みる
+                    const d = new Date(input);
+                    if (!isNaN(d.getTime())) {
+                        year = d.getFullYear();
+                        month = d.getMonth() + 1;
+                        day = d.getDate();
+                    } else {
+                        return null; // パース不能
+                    }
+                }
+            } else {
+                return null;
             }
 
+            // 西暦を和暦に変換
             let era = '';
             let warekiYear = 0;
-            // 和暦の判定ロジック
+            
             if (year > 2019 || (year === 2019 && (month > 5 || (month === 5 && day >= 1)))) {
                 era = '令和'; warekiYear = year - 2018;
             } else if (year > 1989 || (year === 1989 && (month > 1 || (month === 1 && day >= 8)))) {
@@ -483,6 +498,7 @@
             } else {
                 return null;
             }
+            
             return { era, year: warekiYear, month, day };
         }
 
@@ -1430,6 +1446,13 @@
                 if (name === 'company_name') {
                     const fullCompanyName = data[header];
                     document.getElementById('company_name_hidden').value = fullCompanyName;
+                    
+                    let displayName = fullCompanyName;
+                    const match = fullCompanyName.match(/【(.*?)】/);
+                    if (match && match[1]) {
+                        displayName = match[1];
+                    }
+                    document.getElementById('company_name_display').value = displayName;
                     return; 
                 }
                 
@@ -1467,13 +1490,19 @@
                             const daySelect = group.querySelector('.day');
                             
                             eraSelect.value = parsedDate.era;
-                            // 手動でchangeイベントを発火させ、年の選択肢を構築させる
+                            // 手動でchangeイベントを発火させ、年の選択肢を同期的に構築させる
                             eraSelect.dispatchEvent(new Event('change'));
                             
                             // 選択肢が構築された直後に同期的に値をセットする
-                            yearSelect.value = parsedDate.year;
-                            monthSelect.value = parsedDate.month;
-                            daySelect.value = parsedDate.day;
+                            const yearStr = parsedDate.year.toString();
+                            for (let i = 0; i < yearSelect.options.length; i++) {
+                                if (yearSelect.options[i].value === yearStr) {
+                                    yearSelect.selectedIndex = i;
+                                    break;
+                                }
+                            }
+                            monthSelect.value = parsedDate.month.toString();
+                            daySelect.value = parsedDate.day.toString();
                         }
                     }
                 }
