@@ -221,43 +221,31 @@
         // ▼修正: 表示用の日付パース処理も堅牢化
         function formatDateString(dateStr) {
             if (!dateStr) return '';
-            
-            // 既に和暦の文字列の場合
-            const warekiMatch = dateStr.match(/^(令和|平成|昭和|大正)(元|\d+)年(\d+)月(\d+)日/);
-            if (warekiMatch) return dateStr;
-            
-            // 西暦の抽出 (YYYY/MM/DD, YYYY-MM-DD 等)
+            let str = String(dateStr);
             let year, month, day;
-            const seirekiMatch = String(dateStr).match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
-            if (seirekiMatch) {
-                year = parseInt(seirekiMatch[1], 10);
-                month = parseInt(seirekiMatch[2], 10);
-                day = parseInt(seirekiMatch[3], 10);
+
+            const warekiMatch = str.match(/^(令和|平成|昭和|大正)(元|\d+)年(\d{1,2})月(\d{1,2})日/);
+            if (warekiMatch) return str; // すでに和暦ならそのまま返す
+
+            const d = new Date(str);
+            if (!isNaN(d.getTime())) {
+                year = d.getFullYear(); month = d.getMonth() + 1; day = d.getDate();
             } else {
-                // その他の形式の場合 Date オブジェクトで試す
-                const d = new Date(dateStr);
-                if (!isNaN(d.getTime())) {
-                    year = d.getFullYear();
-                    month = d.getMonth() + 1;
-                    day = d.getDate();
+                const seirekiMatch = str.match(/(\d{4})[/\-年](\d{1,2})[/\-月](\d{1,2})/);
+                if (seirekiMatch) {
+                    year = parseInt(seirekiMatch[1], 10); month = parseInt(seirekiMatch[2], 10); day = parseInt(seirekiMatch[3], 10);
                 } else {
-                    return dateStr;
+                    return str; // パース不能な場合は元の文字列を返す
                 }
             }
 
-            let era = '';
-            let warekiYear = 0;
-            if (year > 2019 || (year === 2019 && (month > 5 || (month === 5 && day >= 1)))) {
-                era = '令和'; warekiYear = year - 2018;
-            } else if (year > 1989 || (year === 1989 && (month > 1 || (month === 1 && day >= 8)))) {
-                era = '平成'; warekiYear = year - 1988;
-            } else if (year > 1926 || (year === 1926 && (month > 12 || (month === 12 && day >= 25)))) {
-                era = '昭和'; warekiYear = year - 1925;
-            } else if (year > 1912 || (year === 1912 && (month > 7 || (month === 7 && day >= 30)))) {
-                era = '大正'; warekiYear = year - 1911;
-            } else {
-                return `${year}年${month}月${day}日`;
-            }
+            let era = ''; let warekiYear = 0;
+            if (year > 2019 || (year === 2019 && (month > 5 || (month === 5 && day >= 1)))) { era = '令和'; warekiYear = year - 2018; }
+            else if (year > 1989 || (year === 1989 && (month > 1 || (month === 1 && day >= 8)))) { era = '平成'; warekiYear = year - 1988; }
+            else if (year > 1926 || (year === 1926 && (month > 12 || (month === 12 && day >= 25)))) { era = '昭和'; warekiYear = year - 1925; }
+            else if (year > 1912 || (year === 1912 && (month > 7 || (month === 7 && day >= 30)))) { era = '大正'; warekiYear = year - 1911; }
+            else { return `${year}年${month}月${day}日`; }
+
             return `${era}${warekiYear === 1 ? '元' : warekiYear}年${month}月${day}日`;
         }
 
