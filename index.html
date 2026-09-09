@@ -1550,6 +1550,9 @@
             
             populateMainSections();
             
+            // ▼修正: データ読み込みの前に、生年月日のセレクトボックスの選択肢とイベントをセットアップしておく
+            document.querySelectorAll('.date-select-group').forEach(setupWarekiDateFields);
+            
             // 非同期でURLパラメータ処理とAPI通信を行う即時実行関数
             (async () => {
                 try {
@@ -1630,7 +1633,7 @@
                     window.scrollTo(0, 0);
                 }
                 
-                document.querySelectorAll('.date-select-group').forEach(setupWarekiDateFields);
+                // ▼修正: setupWarekiDateFieldsの呼び出しは populateMainSections の直後に移動したためここからは削除
                 
                 // 初期のdisabled状態を確実に保証するため、ロード直後にcheckedのラジオボタンのchangeイベントを発火
                 document.querySelectorAll('input[type="radio"][onchange*="toggleSection"]:checked').forEach(radio => {
