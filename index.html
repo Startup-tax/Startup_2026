@@ -436,37 +436,48 @@
             '大正': { start: 1912, years: 15 }
         };
 
+        // ★追加: 読み込んだ生年月日を保持し、初期化処理の最後に再適用するための配列
+        let pendingBirthDates = [];
+
         function convertToWareki(input) {
-            if (!input) return null;
-            let str = String(input);
+            if (input === null || input === undefined || input === '') return null;
+
             let year, month, day;
 
-            // 1. 和暦文字列のチェック
-            const warekiMatch = str.match(/^(令和|平成|昭和|大正)(元|\d+)年(\d{1,2})月(\d{1,2})日/);
-            if (warekiMatch) {
-                return {
-                    era: warekiMatch[1],
-                    year: warekiMatch[2] === '元' ? 1 : parseInt(warekiMatch[2], 10),
-                    month: parseInt(warekiMatch[3], 10),
-                    day: parseInt(warekiMatch[4], 10)
-                };
-            }
-
-            // 2. 標準のDateパース（ISO文字列などに対応）
-            const d = new Date(str);
-            if (!isNaN(d.getTime())) {
-                year = d.getFullYear();
-                month = d.getMonth() + 1;
-                day = d.getDate();
+            if (input instanceof Date && !isNaN(input.getTime())) {
+                year = input.getFullYear();
+                month = input.getMonth() + 1;
+                day = input.getDate();
             } else {
-                // 3. 日本語混じりの西暦（1992年6月6日など）のフォールバック
-                const seirekiMatch = str.match(/(\d{4})[/\-年](\d{1,2})[/\-月](\d{1,2})/);
-                if (seirekiMatch) {
-                    year = parseInt(seirekiMatch[1], 10);
-                    month = parseInt(seirekiMatch[2], 10);
-                    day = parseInt(seirekiMatch[3], 10);
+                // 全角数字を半角に、空白を除去
+                let str = String(input)
+                    .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
+                    .replace(/\s/g, '');
+
+                // 1. 和暦文字列のチェック
+                const warekiMatch = str.match(/^(令和|平成|昭和|大正)(元|\d+)年(\d{1,2})月(\d{1,2})日?/);
+                if (warekiMatch) {
+                    return {
+                        era: warekiMatch[1],
+                        year: warekiMatch[2] === '元' ? 1 : parseInt(warekiMatch[2], 10),
+                        month: parseInt(warekiMatch[3], 10),
+                        day: parseInt(warekiMatch[4], 10)
+                    };
+                }
+
+                // 2. 日付のみの西暦文字列は、Dateを介さず直接解釈（タイムゾーンずれ防止）
+                const dateOnlyMatch = str.match(/^(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})日?$/);
+                if (dateOnlyMatch) {
+                    year = parseInt(dateOnlyMatch[1], 10);
+                    month = parseInt(dateOnlyMatch[2], 10);
+                    day = parseInt(dateOnlyMatch[3], 10);
                 } else {
-                    return null;
+                    // 3. ISO日時文字列などはDateに任せる
+                    const d = new Date(str);
+                    if (isNaN(d.getTime())) return null;
+                    year = d.getFullYear();
+                    month = d.getMonth() + 1;
+                    day = d.getDate();
                 }
             }
 
@@ -487,23 +498,57 @@
             return { era, year: warekiYear, month, day };
         }
 
-        function setupWarekiDateFields(group) {
+        // ★追加: 「年」の選択肢を同期的に作り直す（changeイベント任せにしない）
+        function populateWarekiYearOptions(group) {
             const eraSelect = group.querySelector('.era');
             const yearSelect = group.querySelector('.year');
+            yearSelect.innerHTML = '<option value="">年</option>';
+            const era = eraSelect.value;
+            if (era && warekiData[era]) {
+                for (let i = 1; i <= warekiData[era].years; i++) {
+                    yearSelect.options[yearSelect.options.length] = new Option(i === 1 ? '元' : i, i);
+                }
+            }
+        }
+
+        // ★変更: 何度呼んでも選択肢やイベントが重複しないようガードを追加
+        function setupWarekiDateFields(group) {
+            const eraSelect = group.querySelector('.era');
             const monthSelect = group.querySelector('.month');
             const daySelect = group.querySelector('.day');
-            Object.keys(warekiData).forEach(era => {eraSelect.options[eraSelect.options.length] = new Option(era, era);});
-            for (let i = 1; i <= 12; i++) monthSelect.options[monthSelect.options.length] = new Option(i, i);
-            for (let i = 1; i <= 31; i++) daySelect.options[daySelect.options.length] = new Option(i, i);
-            eraSelect.addEventListener('change', () => {
-                yearSelect.innerHTML = '<option value="">年</option>';
-                const era = eraSelect.value;
-                if (era && warekiData[era]) {
-                    for (let i = 1; i <= warekiData[era].years; i++) {
-                        yearSelect.options[yearSelect.options.length] = new Option(i === 1 ? '元' : i, i);
-                    }
-                }
-            });
+
+            if (eraSelect.options.length <= 1) {
+                Object.keys(warekiData).forEach(era => {
+                    eraSelect.options[eraSelect.options.length] = new Option(era, era);
+                });
+            }
+            if (monthSelect.options.length <= 1) {
+                for (let i = 1; i <= 12; i++) monthSelect.options[monthSelect.options.length] = new Option(i, i);
+            }
+            if (daySelect.options.length <= 1) {
+                for (let i = 1; i <= 31; i++) daySelect.options[daySelect.options.length] = new Option(i, i);
+            }
+            if (!group.dataset.warekiBound) {
+                eraSelect.addEventListener('change', () => populateWarekiYearOptions(group));
+                group.dataset.warekiBound = '1';
+            }
+        }
+
+        // ★追加: 元号 → 年の選択肢生成 → 年月日の代入 を同期的に確定させる
+        function applyWarekiDate(prefix, parsed) {
+            const group = document.querySelector(`.date-select-group[data-prefix="${prefix}"]`);
+            if (!group || !parsed) return;
+            setupWarekiDateFields(group);
+            group.querySelector('.era').value = parsed.era;
+            populateWarekiYearOptions(group);
+            group.querySelector('.year').value = String(parsed.year);
+            group.querySelector('.month').value = String(parsed.month);
+            group.querySelector('.day').value = String(parsed.day);
+        }
+
+        // ★追加: 保持しておいた生年月日をまとめて反映する
+        function applyPendingBirthDates() {
+            pendingBirthDates.forEach(item => applyWarekiDate(item.prefix, item.parsed));
         }
 
         function syncAddress(destPrefix, checkbox) {
@@ -1459,30 +1504,21 @@
                 }
             });
 
-            // ▼修正: 生年月日のバインディングでsetTimeoutを復活させて確実にセットする
+            // ★修正: setTimeoutを廃止。解析結果を保持しておき、初期化処理の最後にも再適用する
             const dateHeaders = {'生年月日':'user', '配偶者生年月日':'spouse'};
             for(let i=1; i<=6; i++) { dateHeaders[`扶養親族${i}_生年月日`] = `dependent_${i}`; }
+            pendingBirthDates = [];
             Object.keys(dateHeaders).forEach(header => {
                 const dateString = data[header];
-                if (dateString) {
-                    const parsedDate = convertToWareki(dateString);
-                    if (parsedDate) {
-                        const group = document.querySelector(`.date-select-group[data-prefix="${dateHeaders[header]}"]`);
-                        if (group) {
-                            const eraSelect = group.querySelector('.era');
-                            eraSelect.value = parsedDate.era;
-                            eraSelect.dispatchEvent(new Event('change'));
-                            
-                            // 動的生成を待つために setTimeout で遅延セットする
-                            setTimeout(() => {
-                                group.querySelector('.year').value = parsedDate.year;
-                                group.querySelector('.month').value = parsedDate.month;
-                                group.querySelector('.day').value = parsedDate.day;
-                            }, 100);
-                        }
-                    }
+                if (dateString === undefined || dateString === null || dateString === '') return;
+                const parsedDate = convertToWareki(dateString);
+                if (!parsedDate) {
+                    console.warn('生年月日を解析できませんでした:', header, dateString);
+                    return;
                 }
+                pendingBirthDates.push({ prefix: dateHeaders[header], parsed: parsedDate });
             });
+            applyPendingBirthDates();
 
             ['spouse', ...Array.from({length: 6}, (_, i) => `dependent_${i + 1}`)].forEach(prefix => {
                 const headerName = (prefix === 'spouse' ? '配偶者' : `扶養親族${prefix.split('_')[1]}`) + '_住所同じ';
@@ -1641,6 +1677,9 @@
                 });
                 toggleYearEndAdjustment(form.querySelector('input[name="year_end_adjustment"]:checked').value);
                 updateResidentTaxState();
+
+                // ★追加: 上記の各種toggle処理でクリアされた生年月日を最後に復元する
+                applyPendingBirthDates();
                 
                 const fieldsToKana = [
                     { id: 'name_last', kanaId: 'kana_last' }, { id: 'name_first', kanaId: 'kana_first' },
