@@ -1165,11 +1165,14 @@
             disabledElements.forEach(el => el.disabled = true);
 
             const getDisplayValue = (name) => {
+                // 追加: 会社名の場合は必ず表示用のテキストを返す
+                if (name === 'company_name') {
+                    const displayElement = document.getElementById('company_name_display');
+                    return displayElement ? displayElement.value : null;
+                }
+
                 const input = form.querySelector(`[name="${name}"]`);
                 if (!input || input.closest('.hidden')) {
-                    if (name === 'company_name') {
-                        return formData.get('company_name'); // hidden inputから取得
-                    }
                     return null;
                 }
 
