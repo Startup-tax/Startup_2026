@@ -123,7 +123,6 @@
             padding: 20px; margin: 25px auto; max-width: 90%;
         }
         .answer-id-box p { margin: 0 0 10px 0; padding: 0; text-align: center; color: var(--dark-gray); font-size: 1em; line-height: 1.6; }
-        
         .answer-id-box .id-code {
             font-family: inherit; font-size: 1.6em; font-weight: bold; color: var(--accent-color);
             background-color: #fff; padding: 10px 15px; border-radius: 4px; display: inline-block;
@@ -306,15 +305,15 @@
                     <input type="hidden" name="birth_date">
                 </div>
                 <div class="form-group form-group-small">
-                <div class="tooltip-wrapper">
-                    <label>郵便番号</label>
-                    <div class="tooltip-container">
-                        <span class="tooltip-icon">!</span>
-                        <div class="tooltip-text">令和9年1月1日時点の住民票住所を記載してください</div>
-                    </div>
-                </div>
-                     <input type="text" name="postal_code" class="p-postal-code" placeholder="例: 1600022" required>
-                </div>
+				<div class="tooltip-wrapper">
+    				<label>郵便番号</label>
+    				<div class="tooltip-container">
+    					<span class="tooltip-icon">!</span>
+    					<div class="tooltip-text">令和9年1月1日時点の住民票住所を記載してください</div>
+    				</div>
+				</div>
+					 <input type="text" name="postal_code" class="p-postal-code" placeholder="例: 1600022" required>
+				</div>
                 <div class="form-group form-group-large">
                     <label>住所1（市区町村、番地）</label>
                     <input type="text" id="address1" name="address1" class="p-region p-locality p-street-address" placeholder="例: 東京都新宿区新宿4-3-17" required>
@@ -330,7 +329,7 @@
                 <div class="form-group form-group-ssmall">
                     <label>世帯主の続柄</label>
                     <select name="householder_relationship">
-                        <option value=""></option>
+                    	<option value=""></option>
                         <option value="本人">本人</option> <option value="妻">妻</option><option value="夫">夫</option><option value="息子">息子</option><option value="娘">娘</option>
                         <option value="実父">実父</option><option value="実母">実母</option><option value="義父">義父</option>
                         <option value="義母">義母</option><option value="祖父">祖父</option><option value="祖母">祖母</option>
@@ -439,7 +438,6 @@
             '大正': { start: 1912, years: 15 }
         };
 
-        // ★追加: 読み込んだ生年月日を保持し、初期化処理の最後に再適用するための配列
         let pendingBirthDates = [];
 
         function convertToWareki(input) {
@@ -452,12 +450,10 @@
                 month = input.getMonth() + 1;
                 day = input.getDate();
             } else {
-                // 全角数字を半角に、空白を除去
                 let str = String(input)
                     .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
                     .replace(/\s/g, '');
 
-                // 1. 和暦文字列のチェック
                 const warekiMatch = str.match(/^(令和|平成|昭和|大正)(元|\d+)年(\d{1,2})月(\d{1,2})日?/);
                 if (warekiMatch) {
                     return {
@@ -468,14 +464,12 @@
                     };
                 }
 
-                // 2. 日付のみの西暦文字列は、Dateを介さず直接解釈（タイムゾーンずれ防止）
                 const dateOnlyMatch = str.match(/^(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})日?$/);
                 if (dateOnlyMatch) {
                     year = parseInt(dateOnlyMatch[1], 10);
                     month = parseInt(dateOnlyMatch[2], 10);
                     day = parseInt(dateOnlyMatch[3], 10);
                 } else {
-                    // 3. ISO日時文字列などはDateに任せる
                     const d = new Date(str);
                     if (isNaN(d.getTime())) return null;
                     year = d.getFullYear();
@@ -484,7 +478,6 @@
                 }
             }
 
-            // 西暦 -> 和暦 変換
             let era = '';
             let warekiYear = 0;
             if (year > 2019 || (year === 2019 && (month > 5 || (month === 5 && day >= 1)))) {
@@ -501,7 +494,6 @@
             return { era, year: warekiYear, month, day };
         }
 
-        // ★追加: 「年」の選択肢を同期的に作り直す（changeイベント任せにしない）
         function populateWarekiYearOptions(group) {
             const eraSelect = group.querySelector('.era');
             const yearSelect = group.querySelector('.year');
@@ -514,7 +506,6 @@
             }
         }
 
-        // ★変更: 何度呼んでも選択肢やイベントが重複しないようガードを追加
         function setupWarekiDateFields(group) {
             const eraSelect = group.querySelector('.era');
             const monthSelect = group.querySelector('.month');
@@ -537,7 +528,6 @@
             }
         }
 
-        // ★追加: 元号 → 年の選択肢生成 → 年月日の代入 を同期的に確定させる
         function applyWarekiDate(prefix, parsed) {
             const group = document.querySelector(`.date-select-group[data-prefix="${prefix}"]`);
             if (!group || !parsed) return;
@@ -549,7 +539,6 @@
             group.querySelector('.day').value = String(parsed.day);
         }
 
-        // ★追加: 保持しておいた生年月日をまとめて反映する
         function applyPendingBirthDates() {
             pendingBirthDates.forEach(item => applyWarekiDate(item.prefix, item.parsed));
         }
@@ -605,14 +594,12 @@
             updateResidentTaxState();
         }
 
-        // ▼修正: データ読み込み時に意図しないスクロールが発生する原因のscrollIntoViewを削除
         function toggleMainSections(value) {
             const show = value === 'はい';
             mainSectionsContainer.classList.toggle('hidden', !show);
             mainSectionsContainer.querySelectorAll('input, select, button, textarea').forEach(input => {
                 input.disabled = !show;
             });
-            // スクロール処理を削除
         }
 
         function handleNotDoingReasonChange(value) {
@@ -1337,15 +1324,18 @@
                 reader.onerror = error => reject(error);
             });
             
-            // ▼▼▼ 修正: より安全なクリア処理に置き換える ▼▼▼
-            const hiddenSections = form.querySelectorAll('.hidden');
-            hiddenSections.forEach(section => {
-                if (section.id === 'form-contents' || section.id === 'confirm-contents') return;
-                
-                const elementsToClear = section.querySelectorAll('input:not([type="radio"]):not([type="checkbox"]), select, textarea');
-                elementsToClear.forEach(el => {
+            // ▼▼▼ 修正: 絶対に間違えて消さない、最も安全なクリア処理 ▼▼▼
+            // 「親に .hidden がついている（画面に見えていない）要素」だけを確実に探し出してクリアする
+            const allInputs = form.querySelectorAll('input:not([type="radio"]):not([type="checkbox"]), select, textarea');
+            allInputs.forEach(el => {
+                // 要素自身、または親要素のどれかが .hidden クラスを持っていれば非表示とみなす
+                if (el.closest('.hidden')) {
+                    // form-contents や confirm-contents が .hidden なのは除外（これは画面切り替えのため）
+                    if (el.closest('.hidden').id === 'form-contents' || el.closest('.hidden').id === 'confirm-contents') {
+                        return; 
+                    }
                     el.value = '';
-                });
+                }
             });
             // ▲▲▲ 修正ここまで ▲▲▲
 
