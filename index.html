@@ -1333,6 +1333,12 @@
                 reader.onload = () => resolve({ name: file.name, mimeType: file.type, base64: reader.result.split(',')[1] });
                 reader.onerror = error => reject(error);
             });
+            
+            // 一時的にdisabledを解除する直前のクリア処理を、以下のように正確なセレクタに置き換える
+            const hiddenElements = form.querySelectorAll('.hidden input:not([type="radio"]):not([type="checkbox"]), .hidden select, .hidden textarea');
+            hiddenElements.forEach(el => {
+                el.value = '';
+            });
 
             // 一時的にdisabledを解除
             const disabledElements = Array.from(form.querySelectorAll('[disabled]'));
@@ -1501,7 +1507,8 @@
                     } else if (el.type !== 'file') {
                         el.value = value || '';
                          if(el.classList.contains('currency-input') && value) {
-                            el.value = Number(value).toLocaleString('ja-JP');
+                            const numValue = Number(String(value).replace(/,/g, ''));
+                            el.value = isNaN(numValue) ? value : numValue.toLocaleString('ja-JP');
                         }
                     }
                 }
