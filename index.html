@@ -31,6 +31,7 @@
             color: var(--primary-color); text-align: center; font-weight: 700;
             margin-top: 0; margin-bottom: 30px;
         }
+
         .form-container, .confirm-container { 
             background-color: #fff; padding: 30px; border-radius: var(--border-radius); 
             box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
@@ -50,6 +51,7 @@
         .form-row { display: flex; gap: 20px; }
         .form-row > div { flex: 1; }
         label { display: block; font-weight: bold; margin-bottom: 5px; color: #34495e; }
+
         input[type="text"], input[type="email"], input[type="file"], select, textarea { 
             width: 100%; padding: 12px; border: 1px solid #ccc; 
             border-radius: var(--border-radius); box-sizing: border-box; 
@@ -303,15 +305,15 @@
                     <input type="hidden" name="birth_date">
                 </div>
                 <div class="form-group form-group-small">
-				<div class="tooltip-wrapper">
-    				<label>郵便番号</label>
-    				<div class="tooltip-container">
-    					<span class="tooltip-icon">!</span>
-    					<div class="tooltip-text">令和9年1月1日時点の住民票住所を記載してください</div>
-    				</div>
-				</div>
-					 <input type="text" name="postal_code" class="p-postal-code" placeholder="例: 1600022" required>
-				</div>
+                <div class="tooltip-wrapper">
+                    <label>郵便番号</label>
+                    <div class="tooltip-container">
+                        <span class="tooltip-icon">!</span>
+                        <div class="tooltip-text">令和9年1月1日時点の住民票住所を記載してください</div>
+                    </div>
+                </div>
+                     <input type="text" name="postal_code" class="p-postal-code" placeholder="例: 1600022" required>
+                </div>
                 <div class="form-group form-group-large">
                     <label>住所1（市区町村、番地）</label>
                     <input type="text" id="address1" name="address1" class="p-region p-locality p-street-address" placeholder="例: 東京都新宿区新宿4-3-17" required>
@@ -327,7 +329,7 @@
                 <div class="form-group form-group-ssmall">
                     <label>世帯主の続柄</label>
                     <select name="householder_relationship">
-                    	<option value=""></option>
+                        <option value=""></option>
                         <option value="本人">本人</option> <option value="妻">妻</option><option value="夫">夫</option><option value="息子">息子</option><option value="娘">娘</option>
                         <option value="実父">実父</option><option value="実母">実母</option><option value="義父">義父</option>
                         <option value="義母">義母</option><option value="祖父">祖父</option><option value="祖母">祖母</option>
@@ -1447,11 +1449,11 @@
             const nameAttrMap = {
                 '事業者名':'company_name', 'メールアドレス':'email_address', '姓':'last_name', '名':'first_name', '姓フリガナ':'last_name_furigana', '名フリガナ':'first_name_furigana',
                 '郵便番号':'postal_code', '住所1':'address1', '住所2':'address2', '世帯主の氏名':'householder_name', '世帯主の続柄':'householder_relationship',
-                '年末調整実施確認':'year_end_adjustment', '年末調整しない理由':'not_doing_reason', '前職有無':'previous_job', 'その他収入有無':'other_income_existence', '本人年金収入':'user_pension_income', '本人事業収入':'user_business_income', '本人退職手当等収入':'user_severance_pay_income', '本人その他収入':'user_misc_income', '住民税徴収方法':'resident_tax',
+                '年末調整実施確認':'year_end_adjustment', '年末調整しない理由':'not_doing_reason', '前職有無':'previous_job', 'その他収入有無':'other_income_existence', 'その他収入年金収入金額':'user_pension_income', 'その他収入事業収入金額':'user_business_income', 'その他収入退職手当等収入金額':'user_severance_pay_income', 'その他収入その他収入金額':'user_misc_income', '住民税徴収方法':'resident_tax',
                 '配偶者有無':'spouse_existence', '配偶者姓':'spouse_last_name', '配偶者名':'spouse_first_name', '配偶者姓フリガナ':'spouse_last_name_furigana', '配偶者名フリガナ':'spouse_first_name_furigana',
                 '配偶者住所1':'spouse_address1', '配偶者住所2':'spouse_address2', '配偶者_住所同じ':'spouse_address_same_as_user',
                 '配偶者_給与収入金額':'spouse_salary_income', 
-                '配偶者その他収入有無':'spouse_other_income_existence', '配偶者_年金収入金額':'spouse_pension_income', '配偶者_事業収入金額':'spouse_business_income', '配偶者_退職手当等収入金額':'spouse_severance_pay_income', '配偶者_その他収入金額(その他)':'spouse_misc_income',
+                '配偶者その他収入有無':'spouse_other_income_existence', '配偶者_その他収入年金収入金額':'spouse_pension_income', '配偶者_その他収入事業収入金額':'spouse_business_income', '配偶者_その他収入退職手当等収入金額':'spouse_severance_pay_income', '配偶者_その他収入その他収入金額':'spouse_misc_income',
                 '配偶者障害者手帳交付有無':'spouse_disability_certificate_existence', '配偶者障害者手帳備考':'spouse_disability_certificate_remarks',
                 '扶養親族有無':'dependents_existence', '本人障害者手帳交付有無':'user_disability_certificate_existence', '本人障害者手帳備考':'user_disability_certificate_remarks',
                 '寡婦該当確認':'widow_status', 'ひとり親該当確認':'single_parent_status', '勤労学生該当確認':'working_student_status', '災害者該当確認':'disaster_status',
@@ -1477,10 +1479,10 @@
                 nameAttrMap[`扶養親族${i}_住所同じ`] = `dependent_${i}_address_same_as_user`;
                 nameAttrMap[`扶養親族${i}_給与収入金額`] = `dependent_${i}_salary_income`;
                 nameAttrMap[`扶養親族${i}_その他収入有無`] = `dependent_${i}_other_income_existence`;
-                nameAttrMap[`扶養親族${i}_年金収入金額`] = `dependent_${i}_pension_income`;
-                nameAttrMap[`扶養親族${i}_事業収入金額`] = `dependent_${i}_business_income`;
-                nameAttrMap[`扶養親族${i}_退職手当等収入金額`] = `dependent_${i}_severance_pay_income`;
-                nameAttrMap[`扶養親族${i}_その他収入金額(その他)`] = `dependent_${i}_misc_income`;
+                nameAttrMap[`扶養親族${i}_その他収入年金収入金額`] = `dependent_${i}_pension_income`;
+                nameAttrMap[`扶養親族${i}_その他収入事業収入金額`] = `dependent_${i}_business_income`;
+                nameAttrMap[`扶養親族${i}_その他収入退職手当等収入金額`] = `dependent_${i}_severance_pay_income`;
+                nameAttrMap[`扶養親族${i}_その他収入その他収入金額`] = `dependent_${i}_misc_income`;
                 nameAttrMap[`扶養親族${i}_障害者手帳交付有無`] = `dependent_${i}_disability_certificate_existence`; nameAttrMap[`扶養親族${i}_障害者手帳備考`] = `dependent_${i}_disability_certificate_remarks`;
             }
 
@@ -1684,8 +1686,6 @@
                     loading.classList.add('hidden');
                     window.scrollTo(0, 0);
                 }
-                
-                // ▼修正: setupWarekiDateFieldsの呼び出しは populateMainSections の直後に移動したためここからは削除
                 
                 // 初期のdisabled状態を確実に保証するため、ロード直後にcheckedのラジオボタンのchangeイベントを発火
                 document.querySelectorAll('input[type="radio"][onchange*="toggleSection"]:checked').forEach(radio => {
