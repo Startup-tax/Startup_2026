@@ -1334,10 +1334,17 @@
                 reader.onerror = error => reject(error);
             });
             
-            // 一時的にdisabledを解除する直前に以下を追加
-            form.querySelectorAll('.hidden input:not([type="radio"]):not([type="checkbox"]), .hidden select, .hidden textarea').forEach(el => {
-                el.value = '';
+            // ▼▼▼ 修正: より安全なクリア処理に置き換える ▼▼▼
+            const hiddenSections = form.querySelectorAll('.hidden');
+            hiddenSections.forEach(section => {
+                if (section.id === 'form-contents' || section.id === 'confirm-contents') return;
+                
+                const elementsToClear = section.querySelectorAll('input:not([type="radio"]):not([type="checkbox"]), select, textarea');
+                elementsToClear.forEach(el => {
+                    el.value = '';
+                });
             });
+            // ▲▲▲ 修正ここまで ▲▲▲
 
             // 一時的にdisabledを解除
             const disabledElements = Array.from(form.querySelectorAll('[disabled]'));
