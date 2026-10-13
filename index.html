@@ -1334,9 +1334,8 @@
                 reader.onerror = error => reject(error);
             });
             
-            // 一時的にdisabledを解除する直前のクリア処理を、以下のように正確なセレクタに置き換える
-            const hiddenElements = form.querySelectorAll('.hidden input:not([type="radio"]):not([type="checkbox"]), .hidden select, .hidden textarea');
-            hiddenElements.forEach(el => {
+            // 一時的にdisabledを解除する直前に以下を追加
+            form.querySelectorAll('.hidden input:not([type="radio"]):not([type="checkbox"]), .hidden select, .hidden textarea').forEach(el => {
                 el.value = '';
             });
 
