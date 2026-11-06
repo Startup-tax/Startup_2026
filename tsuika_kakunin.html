@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>年末調整 追加確認フォーム</title>
+    
+    <link rel="icon" href="./favicon.jpg" type="image/jpeg">
+    <link rel="apple-touch-icon" href="./logo-color-2.jpg">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #1e3656; --secondary-color: #5dade2; --accent-color: #e52128;
+            --success-color: #27ae60; --light-gray: #f8f9fa; --medium-gray: #dee2e6;
+            --dark-gray: #495057; --border-radius: 8px;
+        }
+        body { 
+            font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; 
+            line-height: 1.6; color: #333; max-width: 900px; 
+            margin: 20px auto; padding: 0 20px; background-color: #f4f7f9;
+            -webkit-text-size-adjust: 100%;
+            -moz-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+        h1 { 
+            color: var(--primary-color); text-align: center; font-weight: 700;
+            margin-top: 0; margin-bottom: 30px;
+        }
+
+        .form-container, .confirm-container { 
+            background-color: #fff; padding: 30px; border-radius: var(--border-radius); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
+        }
+        .confirm-container, #complete { border-top: 5px solid var(--secondary-color); }
+        fieldset { 
+            border: 1px solid var(--medium-gray); padding: 20px; margin-bottom: 20px; 
+            border-radius: var(--border-radius); 
+        }
+        .fieldset-title {
+            font-weight: 700; color: var(--primary-color); font-size: 1.2em;
+            margin: -10px 0 20px 0; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 8px;
+        }
+        .form-group, .form-row { margin-bottom: 20px; }
+        .form-row { display: flex; gap: 20px; }
+        .form-row > div { flex: 1; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #34495e; }
+
+        input[type="text"], input[type="email"], input[type="file"], select, textarea { 
+            width: 100%; padding: 12px; border: 1px solid #ccc; 
+            border-radius: var(--border-radius); box-sizing: border-box; 
+            font-family: inherit; font-size: inherit; 
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(93, 173, 226, 0.25);
+            outline: none;
+        }
+        input[readonly] { background-color: #e9e9e9; }
+        .radio-group label, .checkbox-group label { display: inline-block; margin-right: 15px; font-weight: normal; }
+        .hidden { display: none !important; }
+
+        .date-select-group { 
+            display: flex; 
+            gap: 10px; 
+            align-items: center; 
+        }
+        .date-select-group .date-row {
+            display: contents;
+        }
+        .date-select-group select { 
+            flex-grow: 1; 
+        }
+
+        .btn-container { text-align: center; margin-top: 30px; }
+        button { 
+            background-color: var(--secondary-color); color: white; padding: 14px 28px; 
+            border: none; border-radius: var(--border-radius); cursor: pointer; 
+            font-size: 16px; font-weight: 700;
+            transition: background-color 0.3s, transform 0.2s; 
+        }
+        button:hover { background-color: #4aa3d3; transform: translateY(-2px); }
+        #confirm-back-btn { background-color: #95a5a6; }
+        .btn-remove { background-color: #e74c3c; font-size: 12px; padding: 4px 10px; }
+        .btn-remove:hover { background-color: #c0392b; }
+        
+        #loading {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(255, 255, 255, 0.85);
+            flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; backdrop-filter: blur(4px);
+        }
+        #loading:not(.hidden) { display: flex; }
+        .loading-logo { max-width: 150px; margin-bottom: 20px; }
+        #loading p { color: var(--primary-color); font-size: 1.2em; margin-top: 20px; font-weight: 700; }
+        #loading p.sub-text { font-size: 0.9em; color: #555; margin-top: 10px; text-align: center; font-weight: 400; }
+
+        .dots-loader { display: flex; justify-content: center; align-items: center; height: 40px; }
+        .dots-loader div { width: 15px; height: 15px; background-color: var(--primary-color); border-radius: 50%; margin: 0 5px; animation: bounce 1.4s infinite ease-in-out both; }
+        .dots-loader .dot1 { animation-delay: -0.32s; } .dots-loader .dot2 { animation-delay: -0.16s; } .dots-loader .dot3 { animation-delay: 0s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+
+        #complete {
+            background-color: #fff; padding: 40px; border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08); text-align: center;
+            max-width: 600px; margin: 40px auto;
+        }
+        .complete-icon { color: var(--success-color); margin-bottom: 20px; }
+        
+        #confirm-contents h2, #complete h2 { color: var(--primary-color); margin-bottom: 15px; font-size: 1.8em; text-align: center; }
+        #complete > #complete-message-content > p { color: #34495e; line-height: 1.8; text-align: center; }
+        
+        .answer-id-box {
+            background-color: var(--light-gray); border: 1px solid var(--medium-gray);
+            border-top: 3px solid var(--primary-color); border-radius: var(--border-radius);
+            padding: 20px; margin: 25px auto; max-width: 90%;
+        }
+        .answer-id-box p { margin: 0 0 10px 0; padding: 0; text-align: center; color: var(--dark-gray); font-size: 1em; line-height: 1.6; }
+        .answer-id-box .id-code {
+            font-family: inherit; font-size: 1.6em; font-weight: bold; color: var(--accent-color);
+            background-color: #fff; padding: 10px 15px; border-radius: 4px; display: inline-block;
+            letter-spacing: 2px; border: 1px solid #ddd; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .privacy-notice { font-size: 0.85em; color: #7f8c8d; border-top: 1px solid #ecf0f1; padding-top: 20px; margin-top: 20px; text-align: left; }
+        .complete-logo-wrapper { margin-top: 30px; text-align: center; }
+        .complete-logo { max-width: 180px; }
+        .complete-logo-wrapper span { display: none; }
+
+        #confirm-table { width: 100%; border-collapse: collapse; margin-top: 25px; }
+        #confirm-table th, #confirm-table td { border: 1px solid var(--medium-gray); padding: 12px 15px; text-align: left; word-break: break-all; }
+        #confirm-table th { background-color: var(--light-gray); width: 35%; font-weight: 700; color: var(--primary-color); }
+        
+        .yen-input-wrapper { position: relative; }
+        .yen-input-wrapper input { padding-right: 2em; text-align: right; }
+        .yen-input-wrapper::after { content: '円'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #555; pointer-events: none; }
+
+        .tooltip-wrapper { display: flex; align-items: baseline; gap: 10px; }
+        .tooltip-container { position: relative; display: inline-block; }
+        .tooltip-icon { display: flex; justify-content: center; align-items: center; width: 20px; height: 20px; background-color: #bdc3c7; color: white; border-radius: 50%; font-weight: bold; cursor: pointer; font-size: 14px; user-select: none; }
+        .tooltip-text { visibility: hidden; opacity: 0; width: 250px; background-color: #34495e; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -125px; transition: opacity 0.3s; font-size: 0.8em; }
+        .tooltip-text::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #34495e transparent transparent transparent; }
+        .tooltip-container:hover .tooltip-text, .tooltip-container.show .tooltip-text { visibility: visible; opacity: 1; }
+        
+        .income-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            max-width: 450px;
+        }
+        .income-input-group .yen-input-wrapper {
+            flex: 2;
+        }
+        .income-input-group select {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .form-group-ssmall input, .form-group-ssmall select { max-width: 100px; }
+        .form-group-small .yen-input-wrapper { display: block;  max-width: 200px; }
+        .form-group-small input, .form-group-small select { max-width: 200px; }
+        .form-group-medium input, .form-group-medium select { max-width: 400px; }
+        .form-group-large input, .form-group-large select { max-width: 500px; }
+
+        .current-files {
+            font-size: 0.9em;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 8px;
+        }
+        .current-files strong {
+            font-weight: bold;
+            color: #495057;
+        }
+        .current-files a {
+            color: #1e3656;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        .current-files a:hover {
+            text-decoration: underline;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+        }
+        .btn-delete-file {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .btn-delete-file:hover {
+            background-color: #c0392b;
+        }
+
+        .mobile-break {
+            display: none;
+        }
+        
+        @media (max-width: 600px) {
+            body { padding: 0 10px; } 
+            h1 { font-size: 1.6em; line-height: 1.4; }
+
+            .mobile-break {
+                display: block;
+            }
+
+            .form-container, .confirm-container, #complete { padding: 20px; }
+            .form-row { flex-direction: column; gap: 0; }
+            .form-row > div { margin-bottom: 20px; }
+            .form-row > div:last-child { margin-bottom: 0; }
+            #confirm-table th, #confirm-table td { display: block; width: 100%; text-align: left !important; }
+            #confirm-table th { border-bottom: none; background-color: transparent; font-size: 0.9em; color: var(--primary-color); padding-bottom: 3px; }
+            #confirm-table td { border-top: none; padding-top: 0; }
+            button { width: 100%; padding: 15px; }
+            #confirm-back-btn { margin-top: 10px; }
+            
+            label {
+                word-break: break-word;
+            }
+
+            .date-select-group {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+            .date-select-group .date-row {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                width: 100%;
+            }
+            .date-row select {
+                flex: 1 1 0;
+                min-width: 50px;
+            }
+            .date-row > span {
+                flex-shrink: 0;
+            }
+            
+            .income-input-group {
+                flex-direction: column;
+                align-items: stretch;
+                max-width: 100%;
+            }
+            .income-input-group .yen-input-wrapper {
+                max-width: 100%;
+            }
+        }
+    
+        /* ▼▼▼ 追加確認フォーム専用 ▼▼▼ */
+        .form-lead { text-align: center; color: #555; font-size: 0.95em; margin: -15px 0 30px 0; }
+        .condition-box {
+            background-color: var(--light-gray); border-left: 4px solid var(--secondary-color);
+            border-radius: 4px; padding: 12px 16px; margin: 0 0 20px 0; font-size: 0.9em; color: var(--dark-gray);
+        }
+        .condition-box p { margin: 0 0 6px 0; font-weight: 700; color: var(--primary-color); }
+        .condition-box ul { margin: 0; padding-left: 1.3em; }
+        .condition-box li { margin-bottom: 3px; }
+        .note { font-size: 0.8em; color: #555; margin-top: 5px; }
+        .entry-group { background-color: #fcfdfe; }
+        #confirm-table tr.section-row th {
+            background-color: var(--primary-color); color: #fff; width: auto; text-align: left;
+        }
+        @media (max-width: 600px) {
+            #confirm-table tr.section-row th { padding: 8px 12px; color: #fff; background-color: var(--primary-color); }
+        }
+    </style>
+</head>
+<body>
+    <div id="form-contents" class="form-container">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="./logo-color-2.jpg" alt="スタートアップ税理士法人 Logo" style="max-width: 180px;">
+        </div>
+        <h1 id="form-title">年末調整<br class="mobile-break">追加確認フォーム</h1>
+        <p class="form-lead">年末調整情報提出フォームのご回答について、追加で確認させていただきたい事項です。<br>該当する項目にご回答ください。</p>
+
+        <form id="main-form" novalidate>
+            <!-- ご本人情報 -->
+            <fieldset>
+                <div class="fieldset-title">ご本人情報</div>
+                <div class="form-group form-group-medium">
+                    <label>事業者名</label>
+                    <input type="hidden" name="company_name" id="company_name_hidden">
+                    <input type="text" id="company_name_display" readonly>
+                </div>
+                <div class="form-row">
+                    <div><label>姓</label><input type="text" name="last_name" required></div>
+                    <div><label>名</label><input type="text" name="first_name" required></div>
+                </div>
+                <div class="form-group form-group-medium">
+                    <label>メールアドレス</label>
+                    <input type="email" name="email_address" required>
+                    <p class="note">※年末調整情報提出フォームでご回答いただいたメールアドレスをご入力ください。</p>
+                </div>
+            </fieldset>
+
+            <!-- ① 23歳未満の扶養親族（生命保険料控除の特例） -->
+            <fieldset>
+                <div class="fieldset-title">23歳未満の扶養親族について</div>
+                <div class="condition-box">
+                    <p>生命保険料控除の特例の適用有無を確認するための質問です</p>
+                    <div style="margin-bottom: 10px;">令和8年(2026年)分から、23歳未満の扶養親族がいる場合、一般生命保険料（平成24年以降に契約した新契約）の控除限度額が4万円から6万円に引き上げられます。</div>
+                    <p>以下のすべてに当てはまる方がいる場合にご回答ください</p>
+                    <ul>
+                        <li>令和8年(2026年)12月31日時点で23歳未満（平成16年(2004年)1月2日以降に生まれた方）</li>
+                        <li>ご本人と同居、または別居しているが仕送りをしている</li>
+                        <li>年末調整情報提出フォームの「扶養親族情報」に入力していない</li>
+                    </ul>
+                    <div style="margin-top: 6px;">※16歳未満の方も対象です。<br>※配偶者の扶養に入っている方（配偶者の勤務先で扶養としている方）も対象です。</div>
+                </div>
+                <div class="form-group">
+                    <label>該当する方はいますか？</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="children_existence" value="あり" onchange="toggleSection(this.value === 'あり', 'children-section')" required> いる</label>
+                        <label><input type="radio" name="children_existence" value="なし" onchange="toggleSection(this.value === 'あり', 'children-section')" required> いない</label>
+                    </div>
+                </div>
+                <div id="children-section" class="hidden">
+                    <div id="children-container"></div>
+                    <div class="btn-container" style="margin-top: 10px;"><button type="button" id="add-child-btn" onclick="addEntry('child')">＋ 親族を追加</button></div>
+                </div>
+            </fieldset>
+
+            <!-- ② 所得金額 -->
+            <fieldset>
+                <div class="fieldset-title">その他収入の所得金額について</div>
+                <div class="condition-box">
+                    <p>以下に当てはまる方はご回答ください</p>
+                    <ul>
+                        <li>年末調整情報提出フォームで、ご本人・配偶者・扶養親族のいずれかについて「その他収入」を「あり」とし、<strong>退職手当等収入・事業収入・その他収入</strong>の金額を入力した</li>
+                    </ul>
+                    <div style="margin-top: 6px;">※年金収入のみ入力された方は回答不要です。<br>※対象者が複数いる場合は「＋ 対象者を追加」からすべての方についてご回答ください。</div>
+                </div>
+                <div class="form-group">
+                    <label>該当する方はいますか？</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="income_existence" value="あり" onchange="toggleSection(this.value === 'あり', 'incomes-section')" required> いる</label>
+                        <label><input type="radio" name="income_existence" value="なし" onchange="toggleSection(this.value === 'あり', 'incomes-section')" required> いない</label>
+                    </div>
+                </div>
+                <div id="incomes-section" class="hidden">
+                    <div id="incomes-container"></div>
+                    <div class="btn-container" style="margin-top: 10px;"><button type="button" id="add-income-btn" onclick="addEntry('income')">＋ 対象者を追加</button></div>
+                </div>
+            </fieldset>
+
+            <div class="btn-container">
+                <button type="button" id="main-submit-btn" onclick="showConfirm()">確認画面へ</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="confirm-contents" class="confirm-container hidden"></div>
+    <div id="loading" class="hidden">
+        <img src="./favicon.jpg" alt="Logo" class="loading-logo">
+        <div class="dots-loader">
+            <div class="dot1"></div> <div class="dot2"></div> <div class="dot3"></div>
+        </div>
+        <p id="loading-text">データを読み込んでいます...</p>
+        <p class="sub-text">この処理には数秒かかることがあります。<br>画面を閉じずにお待ちください。</p>
+    </div>
+    <div id="complete" class="hidden">
+        <div class="complete-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <polyline points="9 15 11 17 15 13"></polyline>
+            </svg>
+        </div>
+        <div id="complete-message-content"></div>
+    </div>
+
+    <script src="https://unpkg.com/wanakana"></script>
+
+    <script>
+        // ★★★ index.html と同じ令和8年用 GAS WebアプリURL ★★★
+        const GAS_WEB_APP_URL = 'https://script.google.com/a/macros/tax-startup.com/s/AKfycbxSIgc5YqpXhgy-7D26FI-A9iv5ZdOE6WyU0JYvMIkHbXwr9CJ_gfmzEx8smxoi9hFKyw/exec';
+        const MY_SECRET_KEY = "StartupTax-Secret-Key-vB9^YWLiVoSW6y5"; // セキュリティー用
+
+        const MAX_CHILDREN = 6;
+        const MAX_INCOMES = 8;
+        // 23歳未満の判定範囲（令和8年12月31日時点）
+        const CHILD_BIRTH_MIN = new Date(2004, 0, 2);   // 平成16年1月2日
+        const CHILD_BIRTH_MAX = new Date(2026, 11, 31); // 令和8年12月31日
+
+        const form = document.getElementById('main-form');
+        const formContents = document.getElementById('form-contents');
+        const confirmContents = document.getElementById('confirm-contents');
+        const loading = document.getElementById('loading');
+        const complete = document.getElementById('complete');
+
+        // 23歳未満の扶養親族の生年月日用（23歳未満なので平成16年以降・令和のみ）
+        const childEraData = {
+            '平成': { offset: 1988, from: 16, to: 31 },
+            '令和': { offset: 2018, from: 1, to: new Date().getFullYear() - 2018 }
+        };
+
+        const tooltip = (text) => `
+            <div class="tooltip-container">
+                <span class="tooltip-icon">!</span>
+                <div class="tooltip-text">${text}</div>
+            </div>`;
+
+        // ---------- テンプレート ----------
+        function childTemplate(i) {
+            return `
+            <fieldset id="child-group-${i}" class="entry-group ${i > 1 ? 'hidden' : ''}">
+                <div class="fieldset-title">
+                    <span>扶養親族 ${i}</span>
+                    ${i > 1 ? `<button type="button" class="btn-remove" onclick="removeEntry('child', ${i})">この親族を削除</button>` : ''}
+                </div>
+                <div class="form-row">
+                    <div><label>姓</label><input type="text" id="child_${i}_name_last" name="child_${i}_last_name" required></div>
+                    <div><label>名</label><input type="text" id="child_${i}_name_first" name="child_${i}_first_name" required></div>
+                </div>
+                <div class="form-row">
+                    <div><label>姓フリガナ</label><input type="text" id="child_${i}_kana_last" name="child_${i}_last_name_furigana" pattern="[ァ-ヶー]+" title="全角カタカナで入力してください" required></div>
+                    <div><label>名フリガナ</label><input type="text" id="child_${i}_kana_first" name="child_${i}_first_name_furigana" pattern="[ァ-ヶー]+" title="全角カタカナで入力してください" required></div>
+                </div>
+                <div class="form-group form-group-ssmall">
+                    <label>続柄</label>
+                    <select name="child_${i}_relationship" required><option value=""></option><option value="息子">息子</option><option value="娘">娘</option><option value="孫">孫</option><option value="兄">兄</option><option value="姉">姉</option><option value="弟">弟</option><option value="妹">妹</option><option value="甥">甥</option><option value="姪">姪</option><option value="その他">その他</option></select>
+                </div>
+                <div class="form-group">
+                    <label>生年月日</label>
+                    <div class="date-select-group" data-prefix="child_${i}">
+                        <div class="date-row">
+                            <select class="era" required><option value="">元号</option></select>
+                            <select class="year" required><option value="">年</option></select><span>年</span>
+                        </div>
+                        <div class="date-row">
+                            <select class="month" required><option value="">月</option></select><span>月</span>
+                            <select class="day" required><option value="">日</option></select><span>日</span>
+                        </div>
+                    </div>
+                    <input type="hidden" name="child_${i}_birth_date">
+                </div>
+                <div class="form-group form-group-small">
+                    <div class="tooltip-wrapper">
+                        <label>令和8年(2026年)中の所得見積金額</label>
+                        ${tooltip('所得金額とは、収入金額から必要経費（給与の場合は給与所得控除額）を差し引いた金額です。<br>令和8年分の給与所得控除額は、給与収入が220万円以下の場合74万円です（例：給与収入100万円の場合、所得金額は26万円）。')}
+                    </div>
+                    <div class="yen-input-wrapper"><input type="text" name="child_${i}_estimated_income" class="currency-input" inputmode="numeric" required></div>
+                    <p class="note">※令和8年(2026年)1月1日～12月31日の見込み額をご入力ください。<br>※収入がない場合は「0」とご入力ください。</p>
+                </div>
+                <div class="form-group">
+                    <label>備考</label>
+                    <textarea name="child_${i}_remarks" rows="3" placeholder="補足事項があればご記入ください（例：別居して仕送りしている、配偶者の扶養に入っている など）"></textarea>
+                </div>
+            </fieldset>`;
+        }
+
+        function incomeTemplate(i) {
+            return `
+            <fieldset id="income-group-${i}" class="entry-group ${i > 1 ? 'hidden' : ''}">
+                <div class="fieldset-title">
+                    <span>対象者 ${i}</span>
+                    ${i > 1 ? `<button type="button" class="btn-remove" onclick="removeEntry('income', ${i})">この対象者を削除</button>` : ''}
+                </div>
+                <div class="form-group">
+                    <label>対象者</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="income_${i}_target_type" value="ご本人" onchange="toggleIncomeName(${i})" required> ご本人</label>
+                        <label><input type="radio" name="income_${i}_target_type" value="配偶者" onchange="toggleIncomeName(${i})" required> 配偶者</label>
+                        <label><input type="radio" name="income_${i}_target_type" value="扶養親族" onchange="toggleIncomeName(${i})" required> 扶養親族</label>
+                    </div>
+                </div>
+                <div id="income-${i}-name-group" class="form-group form-group-medium hidden">
+                    <label>対象者の氏名</label>
+                    <input type="text" name="income_${i}_target_name" placeholder="例: 山田 花子" required>
+                </div>
+                <p class="note" style="margin-bottom: 15px;">※収入金額ではなく<strong>所得金額</strong>をご入力ください。該当しない欄は空欄で構いません。</p>
+                <div class="form-group form-group-small">
+                    <div class="tooltip-wrapper">
+                        <label>退職所得金額</label>
+                        ${tooltip('原則として、（退職手当等の収入金額 － 退職所得控除額）× 1/2 で計算した金額です。退職所得の源泉徴収票の金額をもとにご確認ください。')}
+                    </div>
+                    <div class="yen-input-wrapper"><input type="text" name="income_${i}_severance_income" class="currency-input" inputmode="numeric"></div>
+                </div>
+                <div class="form-group form-group-small">
+                    <div class="tooltip-wrapper">
+                        <label>事業所得金額</label>
+                        ${tooltip('事業収入の金額から必要経費（青色申告の場合は青色申告特別控除額も）を差し引いた金額です。')}
+                    </div>
+                    <div class="yen-input-wrapper"><input type="text" name="income_${i}_business_income" class="currency-input allow-negative" inputmode="numeric"></div>
+                    <p class="note">※赤字の場合は、先頭に「-」（マイナス）を付けてご入力ください。</p>
+                </div>
+                <div class="form-group form-group-small">
+                    <div class="tooltip-wrapper">
+                        <label>その他所得金額</label>
+                        ${tooltip('雑所得・不動産所得・配当所得・譲渡所得・一時所得・利子所得・山林所得の合計金額です。<br>それぞれ収入金額から必要経費などを差し引いた金額を合計してご入力ください。')}
+                    </div>
+                    <div class="yen-input-wrapper"><input type="text" name="income_${i}_misc_income" class="currency-input" inputmode="numeric"></div>
+                </div>
+                <div class="form-group">
+                    <label>備考</label>
+                    <textarea name="income_${i}_remarks" rows="3" placeholder="所得金額の計算が難しい場合は、収入金額と必要経費をご記入ください"></textarea>
+                </div>
+            </fieldset>`;
+        }
+
+        // ---------- 表示切替 ----------
+        function toggleSection(show, sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) section.classList.toggle('hidden', !show);
+        }
+
+        function toggleIncomeName(i) {
+            const checked = form.querySelector(`input[name="income_${i}_target_type"]:checked`);
+            const show = checked && checked.value !== 'ご本人';
+            toggleSection(show, `income-${i}-name-group`);
+        }
+
+        function addEntry(type) {
+            const container = document.getElementById(type === 'child' ? 'children-container' : 'incomes-container');
+            const next = container.querySelector(`.hidden[id^="${type}-group-"]`);
+            if (next) next.classList.remove('hidden');
+            if (!container.querySelector(`.hidden[id^="${type}-group-"]`)) {
+                document.getElementById(`add-${type}-btn`).classList.add('hidden');
+            }
+        }
+
+        function removeEntry(type, i) {
+            const group = document.getElementById(`${type}-group-${i}`);
+            if (!group) return;
+            group.querySelectorAll('input[type="text"], input[type="hidden"], select, textarea').forEach(el => el.value = '');
+            group.querySelectorAll('input[type="radio"]').forEach(el => el.checked = false);
+            group.querySelectorAll('.date-select-group').forEach(g => populateYearOptions(g));
+            if (type === 'income') toggleIncomeName(i);
+            if (i > 1) group.classList.add('hidden');
+            document.getElementById(`add-${type}-btn`).classList.remove('hidden');
+        }
+
+        // ---------- 生年月日（和暦） ----------
+        function populateYearOptions(group) {
+            const era = group.querySelector('.era').value;
+            const yearSelect = group.querySelector('.year');
+            yearSelect.innerHTML = '<option value="">年</option>';
+            const data = childEraData[era];
+            if (!data) return;
+            for (let y = data.from; y <= data.to; y++) {
+                yearSelect.options[yearSelect.options.length] = new Option(y === 1 ? '元' : y, y);
+            }
+        }
+
+        function setupDateFields(group) {
+            const eraSelect = group.querySelector('.era');
+            const monthSelect = group.querySelector('.month');
+            const daySelect = group.querySelector('.day');
+            Object.keys(childEraData).forEach(era => eraSelect.options[eraSelect.options.length] = new Option(era, era));
+            for (let i = 1; i <= 12; i++) monthSelect.options[monthSelect.options.length] = new Option(i, i);
+            for (let i = 1; i <= 31; i++) daySelect.options[daySelect.options.length] = new Option(i, i);
+            eraSelect.addEventListener('change', () => populateYearOptions(group));
+        }
+
+        // 和暦の選択値から西暦Dateを返す（存在しない日付・元号の範囲外はnull）
+        function getBirthDate(group) {
+            const era = group.querySelector('.era').value;
+            const y = parseInt(group.querySelector('.year').value, 10);
+            const m = parseInt(group.querySelector('.month').value, 10);
+            const d = parseInt(group.querySelector('.day').value, 10);
+            if (!era || !y || !m || !d) return null;
+            const date = new Date(childEraData[era].offset + y, m - 1, d);
+            if (date.getMonth() !== m - 1) return null; // 2月30日など
+            const reiwaStart = new Date(2019, 4, 1);
+            if (era === '平成' && date >= reiwaStart) return null;
+            if (era === '令和' && date < reiwaStart) return null;
+            return date;
+        }
+
+        // ---------- 金額入力 ----------
+        function formatCurrency(event) {
+            if (event.isComposing) return;
+            const input = event.target;
+            let value = input.value.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+            const negative = input.classList.contains('allow-negative') && /^\s*[-－ー−]/.test(value);
+            value = value.replace(/[^0-9]/g, '');
+            if (value === '') {
+                input.value = negative ? '-' : '';
+                return;
+            }
+            input.value = (negative ? '-' : '') + Number(value).toLocaleString('ja-JP');
+        }
+
+        const toNumberString = (s) => (s || '').replace(/,/g, '').trim();
+
+        // ---------- 確認画面 ----------
+        function setDisabledByVisibility() {
+            form.querySelectorAll('input, select, textarea').forEach(el => {
+                if (el.id === 'company_name_display') return;
+                el.disabled = !!el.closest('.hidden');
+            });
+        }
+
+        function clearCustomValidity() {
+            form.querySelectorAll('input, select, textarea').forEach(el => el.setCustomValidity(''));
+        }
+
+        const val = (name) => {
+            const el = form.querySelector(`[name="${name}"]`);
+            return el ? el.value.trim() : '';
+        };
+        const radioVal = (name) => {
+            const el = form.querySelector(`input[name="${name}"]:checked`);
+            return el ? el.value : '';
+        };
+        const isVisible = (id) => {
+            const el = document.getElementById(id);
+            return el && !el.closest('.hidden');
+        };
+
+        function showConfirm() {
+            clearCustomValidity();
+            setDisabledByVisibility();
+
+            // 生年月日チェック・hiddenへ格納
+            for (let i = 1; i <= MAX_CHILDREN; i++) {
+                const group = document.querySelector(`.date-select-group[data-prefix="child_${i}"]`);
+                const hidden = form.querySelector(`input[name="child_${i}_birth_date"]`);
+                hidden.value = '';
+                if (!isVisible(`child-group-${i}`)) continue;
+                const era = group.querySelector('.era').value;
+                const yearText = group.querySelector('.year option:checked').textContent;
+                const month = group.querySelector('.month').value;
+                const day = group.querySelector('.day').value;
+                if (!era || !group.querySelector('.year').value || !month || !day) continue; // required で検知
+                const date = getBirthDate(group);
+                if (!date) {
+                    group.querySelector('.era').setCustomValidity('存在しない日付です。生年月日をご確認ください。');
+                } else if (date < CHILD_BIRTH_MIN || date > CHILD_BIRTH_MAX) {
+                    group.querySelector('.era').setCustomValidity('令和8年12月31日時点で23歳未満（平成16年1月2日以降生まれ）の方が対象です。');
+                } else {
+                    hidden.value = `${era}${yearText}年${month}月${day}日`;
+                }
+            }
+
+            // 所得金額：対象者ごとに1つ以上入力
+            for (let i = 1; i <= MAX_INCOMES; i++) {
+                if (!isVisible(`income-group-${i}`)) continue;
+                const amounts = ['severance', 'business', 'misc'].map(k => toNumberString(val(`income_${i}_${k}_income`)));
+                if (amounts.every(a => a === '' || a === '-') && val(`income_${i}_remarks`) === '') {
+                    form.querySelector(`[name="income_${i}_severance_income"]`)
+                        .setCustomValidity('退職所得・事業所得・その他所得のいずれかの金額、または備考欄に収入金額と必要経費をご入力ください。');
+                }
+                const biz = form.querySelector(`[name="income_${i}_business_income"]`);
+                if (toNumberString(biz.value) === '-') biz.setCustomValidity('金額をご入力ください。');
+            }
+
+            const valid = form.checkValidity();
+            if (!valid) form.reportValidity();
+            // 非表示項目の検証除外が済んだら、入力できるよう元に戻す
+            form.querySelectorAll('[disabled]').forEach(el => el.disabled = false);
+            if (!valid) return;
+
+            if (radioVal('children_existence') === 'なし' && radioVal('income_existence') === 'なし') {
+                alert('いずれの項目にも該当しない場合は、ご回答は不要です。');
+                return;
+            }
+
+            const data = collectData();
+            renderConfirm(data);
+            formContents.classList.add('hidden');
+            confirmContents.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function collectData() {
+            const data = {
+                company_name: val('company_name'),
+                last_name: val('last_name'),
+                first_name: val('first_name'),
+                email_address: val('email_address'),
+                children_existence: radioVal('children_existence'),
+                income_existence: radioVal('income_existence'),
+                children: [],
+                incomes: []
+            };
+            if (data.children_existence === 'あり') {
+                for (let i = 1; i <= MAX_CHILDREN; i++) {
+                    if (!isVisible(`child-group-${i}`)) continue;
+                    data.children.push({
+                        last_name: val(`child_${i}_last_name`),
+                        first_name: val(`child_${i}_first_name`),
+                        last_name_furigana: val(`child_${i}_last_name_furigana`),
+                        first_name_furigana: val(`child_${i}_first_name_furigana`),
+                        relationship: val(`child_${i}_relationship`),
+                        birth_date: val(`child_${i}_birth_date`),
+                        estimated_income: toNumberString(val(`child_${i}_estimated_income`)),
+                        remarks: val(`child_${i}_remarks`)
+                    });
+                }
+            }
+            if (data.income_existence === 'あり') {
+                for (let i = 1; i <= MAX_INCOMES; i++) {
+                    if (!isVisible(`income-group-${i}`)) continue;
+                    const type = radioVal(`income_${i}_target_type`);
+                    data.incomes.push({
+                        target_type: type,
+                        target_name: type === 'ご本人' ? `${data.last_name} ${data.first_name}` : val(`income_${i}_target_name`),
+                        severance_income: toNumberString(val(`income_${i}_severance_income`)),
+                        business_income: toNumberString(val(`income_${i}_business_income`)),
+                        misc_income: toNumberString(val(`income_${i}_misc_income`)),
+                        remarks: val(`income_${i}_remarks`)
+                    });
+                }
+            }
+            return data;
+        }
+
+        const yen = (v) => v === '' ? '' : Number(v).toLocaleString('ja-JP') + ' 円';
+
+        function renderConfirm(data) {
+            confirmContents.innerHTML = `
+                <div style="text-align:center;">
+                    <img src="./logo-color-2.jpg" alt="スタートアップ税理士法人 Logo" style="max-width: 180px; margin-bottom: 20px;">
+                </div>
+                <h2>入力内容の確認</h2>
+                <p style="text-align:center; color: #555;">以下の内容で送信します。よろしいですか？</p>
+                <table id="confirm-table"></table>
+                <div class="btn-container">
+                    <button id="confirm-back-btn" type="button" onclick="goBack()">修正する</button>
+                    <button id="submit-btn" type="button" onclick="submitForm()">送信する</button>
+                </div>`;
+            const table = document.getElementById('confirm-table');
+            const addSection = (title) => {
+                const row = table.insertRow();
+                row.className = 'section-row';
+                const th = document.createElement('th');
+                th.colSpan = 2;
+                th.textContent = title;
+                row.appendChild(th);
+            };
+            const addRow = (label, value) => {
+                if (value === '' || value === null || value === undefined) return;
+                const row = table.insertRow();
+                const th = document.createElement('th');
+                th.textContent = label;
+                const td = document.createElement('td');
+                td.textContent = value;
+                td.style.whiteSpace = 'pre-wrap';
+                row.appendChild(th);
+                row.appendChild(td);
+            };
+
+            addSection('ご本人情報');
+            addRow('事業者名', document.getElementById('company_name_display').value);
+            addRow('氏名', `${data.last_name} ${data.first_name}`);
+            addRow('メールアドレス', data.email_address);
+
+            addSection('23歳未満の扶養親族について');
+            addRow('該当する方', data.children_existence === 'あり' ? 'いる' : 'いない');
+            data.children.forEach((c, idx) => {
+                const p = `【扶養親族${idx + 1}】`;
+                addRow(`${p}氏名`, `${c.last_name} ${c.first_name}`);
+                addRow(`${p}フリガナ`, `${c.last_name_furigana} ${c.first_name_furigana}`);
+                addRow(`${p}続柄`, c.relationship);
+                addRow(`${p}生年月日`, c.birth_date);
+                addRow(`${p}令和8年中の所得見積金額`, yen(c.estimated_income));
+                addRow(`${p}備考`, c.remarks);
+            });
+
+            addSection('その他収入の所得金額について');
+            addRow('該当する方', data.income_existence === 'あり' ? 'いる' : 'いない');
+            data.incomes.forEach((r, idx) => {
+                const p = `【対象者${idx + 1}】`;
+                addRow(`${p}対象者`, r.target_type === 'ご本人' ? 'ご本人' : `${r.target_type}（${r.target_name}）`);
+                addRow(`${p}退職所得金額`, yen(r.severance_income));
+                addRow(`${p}事業所得金額`, yen(r.business_income));
+                addRow(`${p}その他所得金額`, yen(r.misc_income));
+                addRow(`${p}備考`, r.remarks);
+            });
+        }
+
+        function goBack() {
+            confirmContents.classList.add('hidden');
+            formContents.classList.remove('hidden');
+        }
+
+        // ---------- 送信 ----------
+        async function submitForm() {
+            const data = collectData();
+            confirmContents.classList.add('hidden');
+            document.getElementById('loading-text').textContent = '送信しています...';
+            loading.classList.remove('hidden');
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    redirect: 'follow',
+                    body: JSON.stringify({ action: 'submitAdditional', postData: data, secret: MY_SECRET_KEY })
+                });
+                const result = await response.json();
+                loading.classList.add('hidden');
+                if (result.result === 'success') {
+                    document.getElementById('complete-message-content').innerHTML = `
+                        <h2>ご回答ありがとうございました</h2>
+                        <p>送信が完了いたしました。</p>
+                        <div class="answer-id-box">
+                            <p>お問い合わせの際には、以下の回答IDをお知らせください。</p>
+                            <div class="id-code">${result.submissionId}</div>
+                        </div>
+                        <p class="privacy-notice">
+                            お預かりした個人情報は、年末調整の目的にのみ利用し、<br>個人情報保護法および当法人のプライバシーポリシーに基づき、厳重に管理いたします。
+                        </p>
+                        <div class="complete-logo-wrapper">
+                            <img src="./logo-color-2.jpg" alt="スタートアップ税理士法人 Logo" class="complete-logo">
+                        </div>`;
+                    complete.classList.remove('hidden');
+                    window.scrollTo(0, 0);
+                } else {
+                    alert(`送信に失敗しました: ${result.message}`);
+                    goBack();
+                }
+            } catch (error) {
+                loading.classList.add('hidden');
+                alert(`送信中にエラーが発生しました: ${error}`);
+                goBack();
+            }
+        }
+
+        // ---------- 初期化 ----------
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('children-container').innerHTML =
+                [...Array(MAX_CHILDREN)].map((_, i) => childTemplate(i + 1)).join('');
+            document.getElementById('incomes-container').innerHTML =
+                [...Array(MAX_INCOMES)].map((_, i) => incomeTemplate(i + 1)).join('');
+            document.querySelectorAll('.date-select-group').forEach(setupDateFields);
+
+            // 氏名 → フリガナ自動入力（ひらがな入力中の読みをカタカナで反映）
+            for (let i = 1; i <= MAX_CHILDREN; i++) {
+                [['name_last', 'kana_last'], ['name_first', 'kana_first']].forEach(([n, k]) => {
+                    const nameInput = document.getElementById(`child_${i}_${n}`);
+                    const kanaInput = document.getElementById(`child_${i}_${k}`);
+                    nameInput.addEventListener('input', () => {
+                        if (nameInput.value === '') { kanaInput.value = ''; return; }
+                        if (typeof wanakana === 'undefined') return;
+                        const kana = [...nameInput.value].filter(c => wanakana.isHiragana(c) || wanakana.isKatakana(c)).join('');
+                        if (kana) kanaInput.value = wanakana.toKatakana(kana);
+                    });
+                });
+            }
+
+            form.addEventListener('input', (e) => {
+                e.target.setCustomValidity && e.target.setCustomValidity('');
+                if (e.target.classList.contains('currency-input')) formatCurrency(e);
+            });
+            form.addEventListener('change', (e) => { e.target.setCustomValidity && e.target.setCustomValidity(''); });
+            form.addEventListener('compositionend', (e) => {
+                if (e.target.classList.contains('currency-input')) formatCurrency(e);
+            });
+
+            document.addEventListener('click', function (e) {
+                if (e.target.classList.contains('tooltip-icon')) {
+                    const parent = e.target.parentElement;
+                    const wasActive = parent.classList.contains('show');
+                    document.querySelectorAll('.tooltip-container.show').forEach(c => c.classList.remove('show'));
+                    if (!wasActive) parent.classList.add('show');
+                } else if (!e.target.closest('.tooltip-container')) {
+                    document.querySelectorAll('.tooltip-container.show').forEach(c => c.classList.remove('show'));
+                }
+            });
+
+            // URLパラメータ（?id=クライアントID_事業者名）から事業者名を取得
+            (async () => {
+                const params = new URLSearchParams(window.location.search);
+                const idParam = params.get('id');
+                const companyParam = params.get('company');
+                let clientId = '', fallbackName = '';
+                if (idParam) {
+                    const parts = idParam.split('_');
+                    clientId = parts[0];
+                    fallbackName = decodeURIComponent(parts.slice(1).join('_') || clientId);
+                } else if (companyParam) {
+                    clientId = companyParam;
+                    fallbackName = decodeURIComponent(companyParam);
+                }
+                if (!clientId) return;
+
+                const display = document.getElementById('company_name_display');
+                document.getElementById('company_name_hidden').value = clientId;
+                display.value = '事業者情報を取得中...';
+                const fallback = () => {
+                    const m = fallbackName.match(/【(.*?)】/);
+                    display.value = m && m[1] ? m[1] : fallbackName;
+                };
+                try {
+                    const response = await fetch(GAS_WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'getClientNameById', clientId: clientId, secret: MY_SECRET_KEY })
+                    });
+                    const result = await response.json();
+                    if (result.result === 'success' && result.clientName) {
+                        display.value = result.clientName;
+                    } else {
+                        fallback();
+                    }
+                } catch (err) {
+                    console.error('事業者名取得API通信エラー:', err);
+                    fallback();
+                }
+            })();
+        });
+    </script>
+</body>
+</html>
