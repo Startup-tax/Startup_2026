@@ -874,6 +874,11 @@
             const subtitleEl = document.getElementById('pdf-subtitle');
             const originalTitle = titleEl.textContent;
             const originalSubtitle = subtitleEl.textContent;
+            // PDFテンプレートの寸法を一時的に調整する（終了後に元へ戻す）
+            //  ・最小高さ（A4 1枚分）を外し、余白込みで1ページを超えて押し出されないようにする
+            //  ・幅をA4の印刷範囲（210mm − 左右余白10mm×2）に収め、右端が切れないようにする
+            const pdfBox = document.getElementById('pdf-content');
+            const originalBoxStyle = { minHeight: pdfBox.style.minHeight, width: pdfBox.style.width, padding: pdfBox.style.padding };
 
             loading.classList.remove('hidden');
             progressWrapper.classList.remove('hidden');
@@ -899,6 +904,9 @@
 
                 titleEl.textContent = '年末調整 追加確認 回答内容';
                 subtitleEl.textContent = '回答内容';
+                pdfBox.style.minHeight = '0';
+                pdfBox.style.width = '190mm';
+                pdfBox.style.padding = '6mm 8mm';
 
                 const zip = new JSZip();
                 const usedNames = {};
@@ -908,10 +916,10 @@
                 const addTr = (label, value) => {
                     const tr = document.createElement('tr');
                     const th = document.createElement('th');
-                    th.style.cssText = "width: 40%; background-color: #f5f5f5; border: 1px solid #333; padding: 4px 8px; text-align: left; font-weight: normal; word-break: break-all;";
+                    th.style.cssText = "width: 40%; background-color: #f5f5f5; border: 1px solid #333; padding: 3px 8px; text-align: left; font-weight: normal; word-break: break-all;";
                     th.textContent = label;
                     const td = document.createElement('td');
-                    td.style.cssText = "width: 60%; border: 1px solid #333; padding: 4px 8px; word-break: break-all; white-space: pre-wrap;";
+                    td.style.cssText = "width: 60%; border: 1px solid #333; padding: 3px 8px; word-break: break-all; white-space: pre-wrap;";
                     td.textContent = isBlankVal(value) ? ' ' : value;
                     tr.appendChild(th);
                     tr.appendChild(td);
@@ -921,7 +929,7 @@
                     const tr = document.createElement('tr');
                     const th = document.createElement('th');
                     th.colSpan = 2;
-                    th.style.cssText = "background-color: #ddd; border: 1px solid #333; padding: 4px 8px; text-align: left; font-weight: bold;";
+                    th.style.cssText = "background-color: #ddd; border: 1px solid #333; padding: 3px 8px; text-align: left; font-weight: bold;";
                     th.textContent = text;
                     tr.appendChild(th);
                     table.appendChild(tr);
@@ -975,7 +983,8 @@
                         image: { type: 'jpeg', quality: 0.98 },
                         html2canvas: { scale: 2, useCORS: true },
                         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+                        // 表全体ではなく行単位で改ページを避ける（内容が長い場合は行の切れ目で次ページへ）
+                        pagebreak: { mode: ['css', 'legacy'], avoid: 'tr' }
                     };
                     const pdfBlob = await html2pdf().set(opt).from(pdfContent).output('blob');
 
@@ -998,6 +1007,9 @@
             } finally {
                 titleEl.textContent = originalTitle;
                 subtitleEl.textContent = originalSubtitle;
+                pdfBox.style.minHeight = originalBoxStyle.minHeight;
+                pdfBox.style.width = originalBoxStyle.width;
+                pdfBox.style.padding = originalBoxStyle.padding;
                 loading.classList.add('hidden');
                 progressWrapper.classList.add('hidden');
                 defaultLoader.classList.remove('hidden');
@@ -1079,7 +1091,7 @@
     </script>
     
     <div id="pdf-template-container" style="position: fixed; left: -9999px; top: 0;">
-        <div id="pdf-content" style="width: 210mm; min-height: 297mm; padding: 15mm; background: white; box-sizing: border-box; font-family: 'HeiseiMinchoStd-W3', 'Ryumin', serif; color: #333; line-height: 1.5;">
+        <div id="pdf-content" style="width: 190mm; padding: 10mm; background: white; box-sizing: border-box; font-family: 'HeiseiMinchoStd-W3', 'Ryumin', serif; color: #333; line-height: 1.5;">
             
             <div style="text-align: center; border-bottom: 2px solid #333; margin-bottom: 25px; padding-bottom: 10px;">
                 <h1 id="pdf-title" style="margin: 0; font-size: 22px; font-weight: bold;">年末調整 提出情報</h1>
