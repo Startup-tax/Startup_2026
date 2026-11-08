@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年末調整 追加確認 回答内容</title>
+    
+    <link rel="icon" href="./favicon.jpg" type="image/jpeg">
+    <link rel="apple-touch-icon" href="./logo-color-2.jpg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #1e3656;
+            --secondary-color: #5dade2;
+            --accent-color: #e52128;
+            --success-color: #27ae60;
+            --light-gray: #f8f9fa;
+            --medium-gray: #dee2e6;
+            --dark-gray: #495057;
+            --border-radius: 8px;
+        }
+        body {
+            font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6; color: #333; max-width: 800px;
+            margin: 20px auto; padding: 0 20px; background-color: #f4f7f9;
+        }
+        .container {
+            background-color: #fff; padding: 30px; border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border-top: 5px solid var(--secondary-color);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: var(--primary-color); text-align: center; font-weight: 700;
+            font-size: 1.8em; margin-top: 0; margin-bottom: 30px;
+        }
+        #message {
+            text-align: center; font-size: 1.1em; color: var(--primary-color);
+            padding: 20px; background-color: var(--light-gray);
+            border-radius: var(--border-radius); margin-bottom: 25px;
+        }
+        
+        .section {
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            padding-top: 30px;
+            margin-top: 30px;
+            position: relative;
+        }
+        .section-title {
+            position: absolute;
+            top: -14px;
+            left: 20px;
+            background-color: #fff;
+            padding: 0 10px;
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1.2em;
+        }
+        .section-content {
+            padding-top: 10px;
+        }
+        .data-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: flex-start;
+        }
+        .data-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .data-label {
+            flex-basis: 35%;
+            font-weight: bold;
+            color: var(--primary-color);
+            padding-right: 15px;
+            box-sizing: border-box;
+        }
+        .data-value {
+            flex-basis: 65%;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+        .data-value a {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: block;
+            margin-bottom: 5px;
+            word-break: break-all;
+        }
+        .data-value a:hover {
+            text-decoration: underline;
+        }
+        
+        .btn {
+            background-color: var(--secondary-color); color: white; padding: 12px 25px;
+            border: none; border-radius: var(--border-radius); cursor: pointer;
+            font-size: 16px; font-weight: 700;
+            transition: background-color 0.3s, transform 0.2s;
+            text-decoration: none; display: inline-block;
+        }
+        .btn:hover {
+            background-color: #4aa3d3; transform: translateY(-2px);
+        }
+        .btn-secondary { background-color: #6c757d; }
+        .file-input, .category-select {
+            width: 100%; padding: 12px; border: 1px solid #ccc;
+            border-radius: var(--border-radius); box-sizing: border-box;
+            font-family: inherit; font-size: inherit; background-color: #fff;
+        }
+        .text-center { text-align: center; }
+        .mt-20 { margin-top: 20px; }
+        .mb-20 { margin-bottom: 20px; }
+
+        .hidden { display: none !important; }
+        #loading {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #ffffff;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999;
+        }
+        .loading-logo { max-width: 150px; margin-bottom: 20px; }
+        #loading p { color: var(--primary-color); font-size: 1.2em; margin-top: 20px; font-weight: 700; }
+        #loading p.sub-text { font-size: 0.9em; color: #555; margin-top: 10px; text-align: center; font-weight: 400; }
+        .dots-loader { display: flex; justify-content: center; align-items: center; height: 40px; }
+        .dots-loader div { width: 15px; height: 15px; background-color: var(--primary-color); border-radius: 50%; margin: 0 5px; animation: bounce 1.4s infinite ease-in-out both; }
+        .dots-loader .dot1 { animation-delay: -0.32s; } .dots-loader .dot2 { animation-delay: -0.16s; } .dots-loader .dot3 { animation-delay: 0s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+
+        @media (max-width: 600px) {
+            body { padding: 0 10px; }
+            h1 { font-size: 1.6em; }
+            .container { padding: 20px; }
+            .section-title { left: 15px; font-size: 1.1em;}
+            .data-row { flex-direction: column; padding-bottom: 15px; }
+            .data-label { margin-bottom: 3px; font-size: 0.9em;}
+        }
+            /* ▼▼▼ 追加確認 確認画面専用 ▼▼▼ */
+        .person-title {
+            font-weight: 700; color: var(--primary-color); background-color: var(--light-gray);
+            border-left: 4px solid var(--secondary-color); padding: 6px 12px; margin: 20px 0 5px 0;
+            border-radius: 4px;
+        }
+        .section-content > .person-title:first-child { margin-top: 0; }
+        .none-text { color: #777; }
+    </style>
+</head>
+
+<body>
+    <div id="loading">
+        <img src="./favicon.jpg" alt="Logo" class="loading-logo">
+        <div class="dots-loader">
+            <div class="dot1"></div> <div class="dot2"></div> <div class="dot3"></div>
+        </div>
+        <p>データを読み込んでいます...</p>
+        <p class="sub-text">この処理には数秒かかることがあります。<br>画面を閉じずにお待ちください。</p>
+    </div>
+
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="./logo-color-2.jpg" alt="スタートアップ税理士法人 Logo" style="max-width: 180px;">
+        </div>
+        <h1>年末調整 追加確認 回答内容</h1>
+        <div id="message"></div>
+        <div id="data-container"></div>
+    </div>
+
+    <script>
+        // ★★★ index.html・view.html と同じ令和8年用 GAS WebアプリURL ★★★
+        const GAS_WEB_APP_URL = 'https://script.google.com/a/macros/tax-startup.com/s/AKfycbxSIgc5YqpXhgy-7D26FI-A9iv5ZdOE6WyU0JYvMIkHbXwr9CJ_gfmzEx8smxoi9hFKyw/exec';
+
+        const ITEM_CHILD = '23歳未満の扶養親族';
+        const ITEM_INCOME = 'その他収入の所得金額';
+
+        // 生年月日の表示を和暦にそろえる（シート側で日付に変換されていた場合の対策）
+        function formatDateString(dateStr) {
+            if (!dateStr) return '';
+            const str = String(dateStr);
+            if (/^(令和|平成|昭和|大正)(元|\d+)年/.test(str)) return str;
+            const m = str.match(/(\d{4})[/\-年](\d{1,2})[/\-月](\d{1,2})/);
+            if (!m) return str;
+            const year = +m[1], month = +m[2], day = +m[3];
+            let era, wy;
+            if (year > 2019 || (year === 2019 && month >= 5)) { era = '令和'; wy = year - 2018; }
+            else if (year > 1989 || (year === 1989 && (month > 1 || day >= 8))) { era = '平成'; wy = year - 1988; }
+            else return `${year}年${month}月${day}日`;
+            return `${era}${wy === 1 ? '元' : wy}年${month}月${day}日`;
+        }
+
+        const isBlank = (v) => v === '' || v === null || v === undefined;
+        const yen = (v) => Number(String(v).replace(/,/g, '')).toLocaleString('ja-JP') + ' 円';
+
+        function addRow(parent, label, value) {
+            const row = document.createElement('div');
+            row.className = 'data-row';
+            const l = document.createElement('div');
+            l.className = 'data-label';
+            l.textContent = label;
+            const v = document.createElement('div');
+            v.className = 'data-value';
+            v.style.whiteSpace = 'pre-wrap';
+            v.textContent = isBlank(value) ? 'なし' : value;
+            row.appendChild(l);
+            row.appendChild(v);
+            parent.appendChild(row);
+        }
+
+        function addPersonTitle(parent, text) {
+            const t = document.createElement('div');
+            t.className = 'person-title';
+            t.textContent = text;
+            parent.appendChild(t);
+        }
+
+        function createSection(title) {
+            const section = document.createElement('div');
+            section.className = 'section';
+            const t = document.createElement('div');
+            t.className = 'section-title';
+            t.textContent = title;
+            const content = document.createElement('div');
+            content.className = 'section-content';
+            section.appendChild(t);
+            section.appendChild(content);
+            document.getElementById('data-container').appendChild(section);
+            return content;
+        }
+
+        function addNone(parent) {
+            const p = document.createElement('div');
+            p.className = 'none-text';
+            p.textContent = '該当なし';
+            parent.appendChild(p);
+        }
+
+        function render(rows) {
+            const first = rows[0];
+            const bySortNo = (a, b) => Number(a['No']) - Number(b['No']);
+            const children = rows.filter(r => r['確認項目'] === ITEM_CHILD).sort(bySortNo);
+            const incomes = rows.filter(r => r['確認項目'] === ITEM_INCOME).sort(bySortNo);
+
+            // ご本人情報
+            const self = createSection('ご本人情報');
+            addRow(self, '回答日時', first['タイムスタンプ']);
+            addRow(self, '回答ID', first['回答ID']);
+            addRow(self, '事業者名', first['事業者名']);
+            addRow(self, '氏名', `${first['本人姓'] || ''} ${first['本人名'] || ''}`.trim());
+            addRow(self, 'メールアドレス', first['メールアドレス']);
+
+            // 23歳未満の扶養親族
+            const childSec = createSection('23歳未満の扶養親族について');
+            if (children.length === 0) {
+                addNone(childSec);
+            } else {
+                children.forEach(c => {
+                    addPersonTitle(childSec, `扶養親族 ${c['No']}`);
+                    addRow(childSec, '氏名', c['対象者氏名']);
+                    addRow(childSec, 'フリガナ', c['対象者フリガナ']);
+                    addRow(childSec, '続柄', c['続柄・対象者区分']);
+                    addRow(childSec, '生年月日', formatDateString(c['生年月日']));
+                    addRow(childSec, '令和8年中の所得見積金額', isBlank(c['令和8年中の所得見積金額']) ? '' : yen(c['令和8年中の所得見積金額']));
+                    addRow(childSec, '備考', c['備考']);
+                });
+            }
+
+            // その他収入の所得金額
+            const incomeSec = createSection('その他収入の所得金額について');
+            if (incomes.length === 0) {
+                addNone(incomeSec);
+            } else {
+                incomes.forEach(r => {
+                    addPersonTitle(incomeSec, `対象者 ${r['No']}`);
+                    const type = r['続柄・対象者区分'];
+                    addRow(incomeSec, '対象者', type === 'ご本人' ? 'ご本人' : `${type}（${r['対象者氏名'] || ''}）`);
+                    // 金額は入力された項目のみ表示
+                    [['退職所得金額', '退職所得金額'], ['事業所得金額', '事業所得金額'], ['その他所得金額', 'その他所得金額']].forEach(([label, key]) => {
+                        if (!isBlank(r[key])) addRow(incomeSec, label, yen(r[key]));
+                    });
+                    addRow(incomeSec, '備考', r['備考']);
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const message = document.getElementById('message');
+            const loading = document.getElementById('loading');
+            const id = new URLSearchParams(window.location.search).get('id');
+
+            if (!id) {
+                message.textContent = '回答IDが見つからないため、回答を表示できません。';
+                loading.classList.add('hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${GAS_WEB_APP_URL}?action=getAdditionalById&id=${encodeURIComponent(id)}`);
+                const result = await response.json();
+                if (result.result !== 'success') throw new Error(result.message);
+                message.textContent = `回答ID: ${id} の内容を表示しています。`;
+                render(result.rows);
+            } catch (error) {
+                message.textContent = `エラー: ${error.message}`;
+            } finally {
+                loading.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
