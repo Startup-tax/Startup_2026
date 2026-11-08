@@ -296,7 +296,7 @@
             <img src="./logo-color-2.jpg" alt="スタートアップ税理士法人 Logo" style="max-width: 180px;">
         </div>
         <h1 id="form-title">年末調整<br class="mobile-break">追加確認フォーム</h1>
-        <p class="form-lead">年末調整情報提出フォームのご回答について、追加で確認させていただきたい事項です。<br>まずは以下の2つの質問にご回答ください。該当する場合のみ入力欄が表示されます。</p>
+        <p class="form-lead">年末調整情報提出フォームのご回答について、追加で確認させていただきたい事項です。<br>以下の2つの質問にご回答ください。「いる」を選ぶと、その下に入力欄が表示されます。</p>
 
         <form id="main-form" novalidate>
             <!-- 事業者名（常に表示） -->
@@ -326,6 +326,11 @@
                         <label><input type="radio" name="children_existence" value="なし" onchange="updateFormState()" required> いない</label>
                     </div>
                 </div>
+                <!-- ① 入力欄（「いる」を選ぶと表示） -->
+                <div id="children-section" class="hidden">
+                    <div id="children-container"></div>
+                    <div class="btn-container" style="margin-top: 10px;"><button type="button" id="add-child-btn" onclick="addEntry('child')">＋ 親族を追加</button></div>
+                </div>
             </fieldset>
 
             <!-- ② 所得金額 -->
@@ -345,6 +350,11 @@
                         <label><input type="radio" name="income_existence" value="なし" onchange="updateFormState()" required> いない</label>
                     </div>
                 </div>
+                <!-- ② 入力欄（「いる」を選ぶと表示） -->
+                <div id="incomes-section" class="hidden">
+                    <div id="incomes-container"></div>
+                    <div class="btn-container" style="margin-top: 10px;"><button type="button" id="add-income-btn" onclick="addEntry('income')">＋ 対象者を追加</button></div>
+                </div>
             </fieldset>
 
             <!-- ご本人情報 -->
@@ -359,20 +369,6 @@
                     <input type="email" name="email_address" required>
                     <p class="note">※年末調整情報提出フォームでご回答いただいたメールアドレスをご入力ください。</p>
                 </div>
-            </fieldset>
-
-            <!-- ① 入力欄 -->
-            <fieldset id="children-section" class="hidden">
-                <div class="fieldset-title">23歳未満の扶養親族の情報</div>
-                <div id="children-container"></div>
-                <div class="btn-container" style="margin-top: 10px;"><button type="button" id="add-child-btn" onclick="addEntry('child')">＋ 親族を追加</button></div>
-            </fieldset>
-
-            <!-- ② 入力欄 -->
-            <fieldset id="incomes-section" class="hidden">
-                <div class="fieldset-title">その他収入の所得金額の入力</div>
-                <div id="incomes-container"></div>
-                <div class="btn-container" style="margin-top: 10px;"><button type="button" id="add-income-btn" onclick="addEntry('income')">＋ 対象者を追加</button></div>
             </fieldset>
 
             <p id="submit-status" class="submit-status">上の2つの質問にご回答ください。</p>
