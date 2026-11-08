@@ -708,12 +708,15 @@
             if (!valid) return;
 
 
-            const data = collectData();
+            pendingData = collectData(); // 入力画面が表示されているうちに回収しておく
+            const data = pendingData;
             renderConfirm(data);
             formContents.classList.add('hidden');
             confirmContents.classList.remove('hidden');
             window.scrollTo(0, 0);
         }
+
+        let pendingData = null;
 
         function collectData() {
             const data = {
@@ -829,7 +832,9 @@
 
         // ---------- 送信 ----------
         async function submitForm() {
-            const data = collectData();
+            // 確認画面表示中は入力画面が非表示のため、確認画面で表示した内容をそのまま送信する
+            const data = pendingData;
+            if (!data) { goBack(); return; }
             confirmContents.classList.add('hidden');
             document.getElementById('loading-text').textContent = '送信しています...';
             loading.classList.remove('hidden');
