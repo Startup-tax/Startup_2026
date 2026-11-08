@@ -275,7 +275,13 @@
         .condition-box li { margin-bottom: 3px; }
         .note { font-size: 0.8em; color: #555; margin-top: 5px; }
         .entry-group { background-color: #fcfdfe; }
-        @media (max-width: 600px) { .pc-break { display: none; } }
+        @media (max-width: 960px) { .pc-break { display: none; } }
+        .exclude-note { color: var(--accent-color); font-weight: 700; text-decoration: underline; }
+        .submit-status { white-space: pre-line; text-align: center; font-weight: 700; color: var(--primary-color); margin: 30px 0 0 0; }
+        .submit-status.is-done { background-color: var(--light-gray); border-radius: 6px; padding: 14px; }
+        #main-submit-btn:disabled, #main-submit-btn:disabled:hover {
+            background-color: #b8c2cc; cursor: not-allowed; transform: none; box-shadow: none;
+        }
         #confirm-table tr.section-row th {
             background-color: var(--primary-color); color: #fff; width: auto; text-align: left;
         }
@@ -290,52 +296,35 @@
             <img src="./logo-color-2.jpg" alt="スタートアップ税理士法人 Logo" style="max-width: 180px;">
         </div>
         <h1 id="form-title">年末調整<br class="mobile-break">追加確認フォーム</h1>
-        <p class="form-lead">年末調整情報提出フォームのご回答について、追加で確認させていただきたい事項です。<br>該当する項目にご回答ください。</p>
+        <p class="form-lead">年末調整情報提出フォームのご回答について、追加で確認させていただきたい事項です。<br>まずは以下の2つの質問にご回答ください。該当する場合のみ入力欄が表示されます。</p>
 
         <form id="main-form" novalidate>
-            <!-- ご本人情報 -->
-            <fieldset>
-                <div class="fieldset-title">ご本人情報</div>
-                <div class="form-group form-group-medium">
-                    <label>事業者名</label>
-                    <input type="hidden" name="company_name" id="company_name_hidden">
-                    <input type="text" id="company_name_display" readonly>
-                </div>
-                <div class="form-row">
-                    <div><label>姓</label><input type="text" name="last_name" required></div>
-                    <div><label>名</label><input type="text" name="first_name" required></div>
-                </div>
-                <div class="form-group form-group-medium">
-                    <label>メールアドレス</label>
-                    <input type="email" name="email_address" required>
-                    <p class="note">※年末調整情報提出フォームでご回答いただいたメールアドレスをご入力ください。</p>
-                </div>
-            </fieldset>
+            <!-- 事業者名（常に表示） -->
+            <div class="form-group form-group-medium" style="margin-bottom: 25px;">
+                <label>事業者名</label>
+                <input type="hidden" name="company_name" id="company_name_hidden">
+                <input type="text" id="company_name_display" readonly>
+            </div>
 
             <!-- ① 23歳未満の扶養親族（生命保険料控除の特例） -->
             <fieldset>
                 <div class="fieldset-title">23歳未満の扶養親族について</div>
                 <div class="condition-box">
                     <p>生命保険料控除の特例の適用有無を確認するための質問です</p>
-                    <div style="margin-bottom: 10px;">令和8年(2026年)分から、23歳未満の扶養親族がいる場合、一般生命保険料（平成24年以降に契約した新契約）の<br class="pc-break">控除限度額が4万円から6万円に引き上げられます。</div>
-                    <p>以下のすべてに当てはまる方がいる場合にご回答ください</p>
+                    <div style="margin-bottom: 10px;">令和8年（2026年）分から、23歳未満の扶養親族がいる場合、<br class="pc-break">一般生命保険料（平成24年以降に契約した新契約）の控除限度額が4万円から6万円に引き上げられます。</div>
+                    <p>以下のすべてに当てはまる方がいる場合にご回答ください<span class="exclude-note">（前回の回答で「扶養親族情報」に入力した人は除く）</span></p>
                     <ul>
-                        <li>令和8年(2026年)12月31日時点で23歳未満（平成16年(2004年)1月2日以降に生まれた方）</li>
+                        <li>令和8年（2026年）12月31日時点で23歳未満（平成16年（2004年）1月2日以降に生まれた方）</li>
                         <li>ご本人と同居、または別居しているが仕送りをしている</li>
-                        <li>年末調整情報提出フォームの「扶養親族情報」に入力していない</li>
                     </ul>
                     <div style="margin-top: 6px;">※16歳未満の方も対象です。<br>※配偶者の扶養に入っている方（配偶者の勤務先で扶養としている方）も対象です。</div>
                 </div>
                 <div class="form-group">
                     <label>該当する方はいますか？</label>
                     <div class="radio-group">
-                        <label><input type="radio" name="children_existence" value="あり" onchange="toggleSection(this.value === 'あり', 'children-section')" required> いる</label>
-                        <label><input type="radio" name="children_existence" value="なし" onchange="toggleSection(this.value === 'あり', 'children-section')" required> いない</label>
+                        <label><input type="radio" name="children_existence" value="あり" onchange="updateFormState()" required> いる</label>
+                        <label><input type="radio" name="children_existence" value="なし" onchange="updateFormState()" required> いない</label>
                     </div>
-                </div>
-                <div id="children-section" class="hidden">
-                    <div id="children-container"></div>
-                    <div class="btn-container" style="margin-top: 10px;"><button type="button" id="add-child-btn" onclick="addEntry('child')">＋ 親族を追加</button></div>
                 </div>
             </fieldset>
 
@@ -352,18 +341,43 @@
                 <div class="form-group">
                     <label>該当する方はいますか？</label>
                     <div class="radio-group">
-                        <label><input type="radio" name="income_existence" value="あり" onchange="toggleSection(this.value === 'あり', 'incomes-section')" required> いる</label>
-                        <label><input type="radio" name="income_existence" value="なし" onchange="toggleSection(this.value === 'あり', 'incomes-section')" required> いない</label>
+                        <label><input type="radio" name="income_existence" value="あり" onchange="updateFormState()" required> いる</label>
+                        <label><input type="radio" name="income_existence" value="なし" onchange="updateFormState()" required> いない</label>
                     </div>
-                </div>
-                <div id="incomes-section" class="hidden">
-                    <div id="incomes-container"></div>
-                    <div class="btn-container" style="margin-top: 10px;"><button type="button" id="add-income-btn" onclick="addEntry('income')">＋ 対象者を追加</button></div>
                 </div>
             </fieldset>
 
-            <div class="btn-container">
-                <button type="button" id="main-submit-btn" onclick="showConfirm()">確認画面へ</button>
+            <!-- ご本人情報 -->
+            <fieldset id="self-section" class="hidden">
+                <div class="fieldset-title">ご本人情報</div>
+                <div class="form-row">
+                    <div><label>姓</label><input type="text" name="last_name" required></div>
+                    <div><label>名</label><input type="text" name="first_name" required></div>
+                </div>
+                <div class="form-group form-group-medium">
+                    <label>メールアドレス</label>
+                    <input type="email" name="email_address" required>
+                    <p class="note">※年末調整情報提出フォームでご回答いただいたメールアドレスをご入力ください。</p>
+                </div>
+            </fieldset>
+
+            <!-- ① 入力欄 -->
+            <fieldset id="children-section" class="hidden">
+                <div class="fieldset-title">23歳未満の扶養親族の情報</div>
+                <div id="children-container"></div>
+                <div class="btn-container" style="margin-top: 10px;"><button type="button" id="add-child-btn" onclick="addEntry('child')">＋ 親族を追加</button></div>
+            </fieldset>
+
+            <!-- ② 入力欄 -->
+            <fieldset id="incomes-section" class="hidden">
+                <div class="fieldset-title">その他収入の所得金額の入力</div>
+                <div id="incomes-container"></div>
+                <div class="btn-container" style="margin-top: 10px;"><button type="button" id="add-income-btn" onclick="addEntry('income')">＋ 対象者を追加</button></div>
+            </fieldset>
+
+            <p id="submit-status" class="submit-status">上の2つの質問にご回答ください。</p>
+            <div class="btn-container" style="margin-top: 10px;">
+                <button type="button" id="main-submit-btn" onclick="showConfirm()" disabled>確認画面へ</button>
             </div>
         </form>
     </div>
@@ -455,11 +469,11 @@
                 </div>
                 <div class="form-group form-group-small">
                     <div class="tooltip-wrapper">
-                        <label>令和8年(2026年)中の所得見積金額</label>
+                        <label>令和8年（2026年）中の所得見積金額</label>
                         ${tooltip('所得金額とは、収入金額から必要経費（給与の場合は給与所得控除額）を差し引いた金額です。<br>令和8年分の給与所得控除額は、給与収入が220万円以下の場合74万円です（例：給与収入100万円の場合、所得金額は26万円）。')}
                     </div>
                     <div class="yen-input-wrapper"><input type="text" name="child_${i}_estimated_income" class="currency-input" inputmode="numeric" required></div>
-                    <p class="note">※令和8年(2026年)1月1日～12月31日の見込み額をご入力ください。<br>※収入がない場合は「0」とご入力ください。</p>
+                    <p class="note">※令和8年（2026年）1月1日～12月31日の見込み額をご入力ください。<br>※収入がない場合は「0」とご入力ください。</p>
                 </div>
                 <div class="form-group">
                     <label>備考</label>
@@ -521,6 +535,33 @@
         function toggleSection(show, sectionId) {
             const section = document.getElementById(sectionId);
             if (section) section.classList.toggle('hidden', !show);
+        }
+
+        // 2つの質問の回答状況に応じて、入力欄の表示と送信ボタンの可否を切り替える
+        function updateFormState() {
+            const c = radioVal('children_existence');
+            const r = radioVal('income_existence');
+            const anyYes = c === 'あり' || r === 'あり';
+            toggleSection(anyYes, 'self-section');
+            toggleSection(c === 'あり', 'children-section');
+            toggleSection(r === 'あり', 'incomes-section');
+
+            const status = document.getElementById('submit-status');
+            const btn = document.getElementById('main-submit-btn');
+            status.classList.remove('is-done');
+            if (!c || !r) {
+                status.textContent = (c || r) ? 'もう1つの質問にもご回答ください。' : '上の2つの質問にご回答ください。';
+                status.classList.remove('hidden');
+                btn.disabled = true;
+            } else if (!anyYes) {
+                status.textContent = 'いずれにも該当しないため、送信は不要です。このままページを閉じてください。\nご確認ありがとうございました。';
+                status.classList.add('is-done');
+                status.classList.remove('hidden');
+                btn.disabled = true;
+            } else {
+                status.classList.add('hidden');
+                btn.disabled = false;
+            }
         }
 
         function toggleIncomeName(i) {
@@ -667,13 +708,9 @@
             const valid = form.checkValidity();
             if (!valid) form.reportValidity();
             // 非表示項目の検証除外が済んだら、入力できるよう元に戻す
-            form.querySelectorAll('[disabled]').forEach(el => el.disabled = false);
+            form.querySelectorAll('input[disabled], select[disabled], textarea[disabled]').forEach(el => el.disabled = false);
             if (!valid) return;
 
-            if (radioVal('children_existence') === 'なし' && radioVal('income_existence') === 'なし') {
-                alert('いずれの項目にも該当しない場合は、ご回答は不要です。');
-                return;
-            }
 
             const data = collectData();
             renderConfirm(data);
