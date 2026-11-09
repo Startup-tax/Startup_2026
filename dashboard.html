@@ -329,7 +329,7 @@
 
         let dashboardData = null;
         let currentCompanyName = null;
-        let dashboardKey = ''; // 【追加】確認画面キー（?key=... のURLの場合のみ値が入る）
+        let currentClientId = null; // 【セキュリティ修正A】管理系APIは事業者IDで問い合わせる
 
         function toggleDropdown(event) {
             event.stopPropagation();
@@ -399,8 +399,8 @@
                     method: 'POST',
                     body: JSON.stringify({
                         action: actionType,
-                        company: currentCompanyName,
-                        dashboardKey: dashboardKey,
+                        clientId: currentClientId,
+                        company: currentCompanyName, // 旧GAS互換用（GAS更新後は未使用）
                         secret: MY_SECRET_KEY
                     })
                 });
@@ -430,7 +430,7 @@
                             body: JSON.stringify({
                                 action: 'getFileContent',
                                 fileId: file.id,
-                                dashboardKey: dashboardKey,
+                                clientId: currentClientId,
                                 secret: MY_SECRET_KEY
                             })
                         });
@@ -497,8 +497,8 @@
                     method: 'POST',
                     body: JSON.stringify({
                         action: 'getAllEmployeeData',
-                        company: currentCompanyName,
-                        dashboardKey: dashboardKey,
+                        clientId: currentClientId,
+                        company: currentCompanyName, // 旧GAS互換用（GAS更新後は未使用）
                         secret: MY_SECRET_KEY
                     })
                 });
@@ -636,48 +636,42 @@
                 // 修正要件1 【ハイブリッドURLへの対応とAPI通信の追加】
                 const params = new URLSearchParams(window.location.search);
                 const rawId = params.get('id'); // 'company' から 'id' に変更
-                dashboardKey = (params.get('key') || '').trim(); // 【追加】確認画面キー
                 
-                if (!rawId && !dashboardKey) {
+                if (!rawId) {
                     throw new Error("対象の事業者IDが指定されていません。");
                 }
 
-                let nameResponse;
-                if (dashboardKey) {
-                    // 【追加】キー付きURL（?key=...）の場合：キーから事業者名を取得
-                    nameResponse = await fetch(GAS_WEB_APP_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            action: 'getClientNameByDashboardKey',
-                            dashboardKey: dashboardKey,
-                            secret: MY_SECRET_KEY
-                        })
-                    });
-                } else {
-                    // 従来のURL（?id=...）の場合：アンダーバーで分割し、前半のID部分を抽出
-                    const clientId = rawId.split('_')[0];
-                    
-                    // GASに対してPOSTリクエストを送信し、事業者名を取得
-                    nameResponse = await fetch(GAS_WEB_APP_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            action: 'getClientNameById',
-                            clientId: clientId,
-                            secret: MY_SECRET_KEY
-                        })
-                    });
-                }
+                // アンダーバーで分割し、前半のID部分を抽出
+                const clientId = rawId.split('_')[0];
+                currentClientId = clientId;
+                
+                // GASに対してPOSTリクエストを送信し、事業者名を取得
+                const nameResponse = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'getClientNameById',
+                        clientId: clientId,
+                        secret: MY_SECRET_KEY
+                    })
+                });
 
                 const nameResult = await nameResponse.json();
                 
                 if (nameResult.result !== 'success') {
-                    throw new Error(dashboardKey ? nameResult.message : `事業者名の取得に失敗しました: ${nameResult.message}`);
+                    throw new Error(`事業者名の取得に失敗しました: ${nameResult.message}`);
                 }
 
                 currentCompanyName = nameResult.clientName;
 
-                // 以降は取得した事業者名を用いてデータを取得 (GETリクエスト)
-                const response = await fetch(`${GAS_WEB_APP_URL}?action=getClientDashboardData&company=${encodeURIComponent(currentCompanyName)}&key=${encodeURIComponent(dashboardKey)}&secret=${MY_SECRET_KEY}`);
+                // 【セキュリティ修正A】事業者IDを用いてPOSTでデータを取得
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'getClientDashboardData',
+                        clientId: currentClientId,
+                        secret: MY_SECRET_KEY
+                    })
+                });
                 const result = await response.json();
 
                 if (result.result !== 'success') {
