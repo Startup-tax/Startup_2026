@@ -67,18 +67,18 @@
             font-size: 1.2em;
             margin-bottom: 15px;
         }
-        #employee-list-table {
+        .list-table {
             width: 100%;
             border-collapse: collapse;
             table-layout: auto;
         }
-        #employee-list-table th, #employee-list-table td {
+        .list-table th, .list-table td {
             border: 1px solid var(--medium-gray);
             padding: 12px;
             text-align: left;
             vertical-align: middle;
         }
-        #employee-list-table th {
+        .list-table th {
             background-color: #f8f9fa;
             font-weight: bold;
             color: var(--primary-color);
@@ -134,21 +134,21 @@
                 font-size: 1.2em;
             }
 
-            #employee-list-table thead {
+            .list-table thead {
                 display: none;
             }
-            #employee-list-table, #employee-list-table tbody {
+            .list-table, .list-table tbody {
                 display: block;
                 width: 100%;
             }
-            #employee-list-table tr {
+            .list-table tr {
                 display: block;
                 border: 1px solid var(--medium-gray);
                 border-radius: var(--border-radius);
                 margin-bottom: 15px;
                 padding: 10px;
             }
-            #employee-list-table td {
+            .list-table td {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
@@ -156,10 +156,10 @@
                 border-bottom: 1px solid #f0f0f0;
                 padding: 10px 5px;
             }
-            #employee-list-table td:last-child {
+            .list-table td:last-child {
                 border-bottom: none;
             }
-            #employee-list-table td::before {
+            .list-table td::before {
                 content: attr(data-label);
                 font-weight: bold;
                 color: var(--primary-color);
@@ -167,7 +167,7 @@
                 margin-right: 10px;
                 flex-shrink: 0;
             }
-            #employee-list-table .name-cell span {
+            .list-table .name-cell span {
                 word-break: break-all;
                 text-align: right;
             }
@@ -283,7 +283,42 @@
             0% { background-position: 40px 0; }
             100% { background-position: 0 0; }
         }
-    </style>
+    
+        /* ▼▼▼ タブ（回答送信／追加確認） ▼▼▼ */
+        .tab-bar {
+            display: flex; gap: 8px; margin-top: 25px;
+            border-bottom: 2px solid var(--medium-gray);
+        }
+        .tab-btn {
+            background: none; border: none; cursor: pointer; font-family: inherit;
+            font-size: 1em; font-weight: 700; color: #6c757d;
+            padding: 10px 18px; margin-bottom: -2px;
+            border-bottom: 3px solid transparent; border-radius: 6px 6px 0 0;
+            transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+        }
+        .tab-btn:hover { color: var(--primary-color); background-color: var(--light-gray); }
+        .tab-btn.active { color: var(--primary-color); border-bottom-color: var(--secondary-color); }
+        .tab-count {
+            display: inline-block; min-width: 22px; padding: 1px 7px; margin-left: 6px;
+            border-radius: 11px; font-size: 0.8em; background-color: var(--medium-gray); color: var(--primary-color);
+        }
+        .tab-btn.active .tab-count { background-color: var(--secondary-color); color: #fff; }
+        .dropdown-label {
+            padding: 8px 16px 4px 16px; font-size: 0.75em; font-weight: 700; color: #6c757d;
+            background-color: var(--light-gray); cursor: default;
+        }
+        .dropdown-group + .dropdown-group { border-top: 1px solid var(--medium-gray); }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+        .tab-note { font-size: 0.85em; color: #555; margin: 0 0 12px 0; }
+        .old-tag {
+            display: inline-block; margin-left: 6px; padding: 0 6px; font-size: 0.75em;
+            color: #6c757d; border: 1px solid var(--medium-gray); border-radius: 4px; vertical-align: middle;
+        }
+        @media (max-width: 600px) {
+            .tab-btn { flex: 1; padding: 10px 8px; font-size: 0.95em; }
+        }
+</style>
 </head>
 <body>
     <div id="loading" class="hidden">
@@ -312,9 +347,17 @@
             <div class="dropdown hidden" id="download-dropdown">
                 <button class="dropdown-btn" onclick="toggleDropdown(event)">ダウンロード</button>
                 <div class="dropdown-content">
-                    <a href="#" id="download-csv-btn">一覧をCSVでダウンロード</a>
-                    <a href="#" id="download-zip-btn">添付ファイルを一括ダウンロード</a>
-                    <a href="#" id="download-pdf-btn">回答PDFをまとめてダウンロード</a>
+                    <div class="dropdown-group" id="download-main-group">
+                        <div class="dropdown-label">回答送信</div>
+                        <a href="#" id="download-csv-btn">一覧をCSVでダウンロード</a>
+                        <a href="#" id="download-zip-btn">添付ファイルを一括ダウンロード</a>
+                        <a href="#" id="download-pdf-btn">回答PDFをまとめてダウンロード</a>
+                    </div>
+                    <div class="dropdown-group" id="download-additional-group">
+                        <div class="dropdown-label">追加確認</div>
+                        <a href="#" id="download-additional-csv-btn">一覧をCSVでダウンロード</a>
+                        <a href="#" id="download-additional-pdf-btn">回答PDFをまとめてダウンロード</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -329,7 +372,8 @@
 
         let dashboardData = null;
         let currentCompanyName = null;
-        let currentClientId = null; // 【セキュリティ修正A】管理系APIは事業者IDで問い合わせる
+        let dashboardKey = ''; // 【追加】確認画面キー（?key=... のURLの場合のみ値が入る）
+        let currentClientId = ''; // 【セキュリティ修正A】事業者ID（?id=... のURLの場合のみ値が入る）
 
         function toggleDropdown(event) {
             event.stopPropagation();
@@ -399,8 +443,8 @@
                     method: 'POST',
                     body: JSON.stringify({
                         action: actionType,
-                        clientId: currentClientId,
-                        company: currentCompanyName, // 旧GAS互換用（GAS更新後は未使用）
+                        clientId: currentClientId, // 【セキュリティ修正A】事業者名ではなくID／キーで問い合わせる
+                        dashboardKey: dashboardKey,
                         secret: MY_SECRET_KEY
                     })
                 });
@@ -430,7 +474,8 @@
                             body: JSON.stringify({
                                 action: 'getFileContent',
                                 fileId: file.id,
-                                clientId: currentClientId,
+                                clientId: currentClientId, // 【セキュリティ修正A】
+                                dashboardKey: dashboardKey,
                                 secret: MY_SECRET_KEY
                             })
                         });
@@ -497,8 +542,8 @@
                     method: 'POST',
                     body: JSON.stringify({
                         action: 'getAllEmployeeData',
-                        clientId: currentClientId,
-                        company: currentCompanyName, // 旧GAS互換用（GAS更新後は未使用）
+                        clientId: currentClientId, // 【セキュリティ修正A】事業者名ではなくID／キーで問い合わせる
+                        dashboardKey: dashboardKey,
                         secret: MY_SECRET_KEY
                     })
                 });
@@ -624,6 +669,18 @@
                 toggleDropdown(new Event('click'));
             });
 
+            document.getElementById('download-additional-csv-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                downloadAdditionalCSV();
+                toggleDropdown(new Event('click'));
+            });
+
+            document.getElementById('download-additional-pdf-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                downloadAdditionalPdfs();
+                toggleDropdown(new Event('click'));
+            });
+
             loadDashboardData();
         });
 
@@ -636,39 +693,54 @@
                 // 修正要件1 【ハイブリッドURLへの対応とAPI通信の追加】
                 const params = new URLSearchParams(window.location.search);
                 const rawId = params.get('id'); // 'company' から 'id' に変更
+                dashboardKey = (params.get('key') || '').trim(); // 【追加】確認画面キー
                 
-                if (!rawId) {
+                if (!rawId && !dashboardKey) {
                     throw new Error("対象の事業者IDが指定されていません。");
                 }
 
-                // アンダーバーで分割し、前半のID部分を抽出
-                const clientId = rawId.split('_')[0];
-                currentClientId = clientId;
-                
-                // GASに対してPOSTリクエストを送信し、事業者名を取得
-                const nameResponse = await fetch(GAS_WEB_APP_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'getClientNameById',
-                        clientId: clientId,
-                        secret: MY_SECRET_KEY
-                    })
-                });
+                let nameResponse;
+                if (dashboardKey) {
+                    // 【追加】キー付きURL（?key=...）の場合：キーから事業者名を取得
+                    nameResponse = await fetch(GAS_WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'getClientNameByDashboardKey',
+                            dashboardKey: dashboardKey,
+                            secret: MY_SECRET_KEY
+                        })
+                    });
+                } else {
+                    // 従来のURL（?id=...）の場合：アンダーバーで分割し、前半のID部分を抽出
+                    const clientId = rawId.split('_')[0];
+                    currentClientId = clientId; // 【セキュリティ修正A】
+                    
+                    // GASに対してPOSTリクエストを送信し、事業者名を取得
+                    nameResponse = await fetch(GAS_WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'getClientNameById',
+                            clientId: clientId,
+                            secret: MY_SECRET_KEY
+                        })
+                    });
+                }
 
                 const nameResult = await nameResponse.json();
                 
                 if (nameResult.result !== 'success') {
-                    throw new Error(`事業者名の取得に失敗しました: ${nameResult.message}`);
+                    throw new Error(dashboardKey ? nameResult.message : `事業者名の取得に失敗しました: ${nameResult.message}`);
                 }
 
                 currentCompanyName = nameResult.clientName;
 
-                // 【セキュリティ修正A】事業者IDを用いてPOSTでデータを取得
+                // 【セキュリティ修正A】事業者ID（またはキー）を用いてPOSTでデータを取得（URLに秘密鍵・IDを載せない）
                 const response = await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
                     body: JSON.stringify({
                         action: 'getClientDashboardData',
                         clientId: currentClientId,
+                        dashboardKey: dashboardKey,
                         secret: MY_SECRET_KEY
                     })
                 });
@@ -680,6 +752,7 @@
 
                 const data = result.data;
                 dashboardData = data; 
+                const additionalList = Array.isArray(data.additional) ? data.additional : [];
                 
                 let contentHtml = `
                     <div class="overview-panel">
@@ -691,19 +764,36 @@
                             回答済み従業員
                             <span>${data.employeeCount}<span class="unit">名</span></span>
                         </div>
+                        <div class="overview-item">
+                            追加確認の回答
+                            <span>${additionalList.length}<span class="unit">件</span></span>
+                        </div>
+                    </div>
+
+                    <div class="tab-bar" role="tablist">
+                        <button type="button" class="tab-btn active" data-tab="main" role="tab">回答送信<span class="tab-count">${data.employeeCount}</span></button>
+                        <button type="button" class="tab-btn" data-tab="additional" role="tab">追加確認<span class="tab-count">${additionalList.length}</span></button>
                     </div>
                 `;
 
+                // ▼ タブ1：回答送信（既存の一覧）
                 contentHtml += `
+                    <div class="tab-panel active" id="tab-main">
                     <div class="section">
                         <div class="section-title">回答状況一覧</div>
                 `;
 
+                // ダウンロードメニューは、回答送信・追加確認のどちらかにデータがあれば表示
+                document.getElementById('download-main-group').classList.toggle('hidden', data.employeeCount === 0);
+                document.getElementById('download-additional-group').classList.toggle('hidden', additionalList.length === 0);
+                if (data.employeeCount > 0 || additionalList.length > 0) {
+                    document.getElementById('download-dropdown').classList.remove('hidden');
+                }
+
                 if (data.employeeCount > 0) {
-                        document.getElementById('download-dropdown').classList.remove('hidden');
 
                     contentHtml += `
-                        <table id="employee-list-table">
+                        <table id="employee-list-table" class="list-table">
                             <thead>
                                 <tr>
                                     <th class="name-cell">氏名</th>
@@ -733,9 +823,13 @@
                     contentHtml += '<p style="text-align:center; padding: 20px 0;">まだ回答済みの従業員はいません。</p>';
                 }
                 
-                contentHtml += `</div>`;
+                contentHtml += `</div></div>`;
+
+                // ▼ タブ2：追加確認
+                contentHtml += buildAdditionalPanel(additionalList);
                 
                 container.innerHTML = contentHtml;
+                setupTabs();
 
             } catch (error) {
                 container.innerHTML = `<p style="color: red; text-align: center;">データの読み込みに失敗しました: ${error.message}</p>`;
@@ -744,6 +838,273 @@
             }
         }
         
+        // ===== 追加確認のダウンロード =====
+        const ADDITIONAL_ITEM_CHILD = '23歳未満の扶養親族';
+        const ADDITIONAL_ITEM_INCOME = 'その他収入の所得金額';
+
+        // 追加確認シートの全行を取得（1対象者1行）
+        async function fetchAdditionalRows() {
+            const response = await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'getAllAdditionalData', clientId: currentClientId, dashboardKey: dashboardKey, secret: MY_SECRET_KEY }) // 【セキュリティ修正A】
+            });
+            const result = await response.json();
+            if (result.result !== 'success') throw new Error(result.message);
+            return result.rows || [];
+        }
+
+        const safeFileName = (str) => String(str || '').replace(/[\\/:"*?<>|]/g, '_');
+        const todayStr = () => new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const isBlankVal = (v) => v === '' || v === null || v === undefined;
+        const yenText = (v) => isBlankVal(v) ? '' : Number(String(v).replace(/,/g, '')).toLocaleString('ja-JP') + ' 円';
+
+        async function downloadAdditionalCSV() {
+            const loading = document.getElementById('loading');
+            const loadingText = document.getElementById('loading-text');
+            loading.classList.remove('hidden');
+            loadingText.textContent = '追加確認のデータを取得中...';
+            try {
+                const rows = await fetchAdditionalRows();
+                if (rows.length === 0) {
+                    alert('ダウンロードするデータがありません。');
+                    return;
+                }
+                const columns = [
+                    ['回答日時', 'タイムスタンプ'], ['回答ID', '回答ID'], ['本人姓', '本人姓'], ['本人名', '本人名'],
+                    ['メールアドレス', 'メールアドレス'], ['確認項目', '確認項目'], ['No', 'No'],
+                    ['対象者氏名', '対象者氏名'], ['対象者フリガナ', '対象者フリガナ'], ['続柄・対象者区分', '続柄・対象者区分'],
+                    ['生年月日', '生年月日'], ['令和8年中の所得見積金額', '令和8年中の所得見積金額'],
+                    ['退職所得金額', '退職所得金額'], ['事業所得金額', '事業所得金額'], ['その他所得金額', 'その他所得金額'],
+                    ['備考', '備考'], ['確認画面URL', '確認画面URL']
+                ];
+                const q = (v) => `"${String(isBlankVal(v) ? '' : v).replace(/"/g, '""')}"`;
+                const lines = [columns.map(c => q(c[0])).join(',')];
+                rows.forEach(r => lines.push(columns.map(c => q(r[c[1]])).join(',')));
+
+                const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+                const blob = new Blob([bom, lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+                saveAs(blob, `${safeFileName(dashboardData.clientName || currentCompanyName)}_追加確認一覧_${todayStr()}.csv`);
+            } catch (e) {
+                alert(`エラーが発生しました: ${e.message}`);
+            } finally {
+                loading.classList.add('hidden');
+                loadingText.textContent = 'データを読み込んでいます...';
+            }
+        }
+
+        // 送信（回答ID）ごとに1つのPDFを作成し、ZIPにまとめる
+        async function downloadAdditionalPdfs() {
+            const loading = document.getElementById('loading');
+            const loadingText = document.getElementById('loading-text');
+            const progressWrapper = document.getElementById('progress-wrapper');
+            const progressBar = document.getElementById('download-progress-bar');
+            const defaultLoader = document.getElementById('default-loader');
+            const titleEl = document.getElementById('pdf-title');
+            const subtitleEl = document.getElementById('pdf-subtitle');
+            const originalTitle = titleEl.textContent;
+            const originalSubtitle = subtitleEl.textContent;
+            // PDFテンプレートの寸法を一時的に調整する（終了後に元へ戻す）
+            //  ・最小高さ（A4 1枚分）を外し、余白込みで1ページを超えて押し出されないようにする
+            //  ・幅をA4の印刷範囲（210mm − 左右余白10mm×2）に収め、右端が切れないようにする
+            const pdfBox = document.getElementById('pdf-content');
+            const originalBoxStyle = { minHeight: pdfBox.style.minHeight, width: pdfBox.style.width, padding: pdfBox.style.padding };
+
+            loading.classList.remove('hidden');
+            progressWrapper.classList.remove('hidden');
+            defaultLoader.classList.add('hidden');
+            progressBar.style.width = '0%';
+            loadingText.textContent = '追加確認のデータを取得中...';
+
+            try {
+                const rows = await fetchAdditionalRows();
+                if (rows.length === 0) {
+                    alert('データがありません。');
+                    return;
+                }
+
+                // 回答IDごとにまとめる（並び順はシートの順＝送信順）
+                const groups = [];
+                const map = {};
+                rows.forEach(r => {
+                    const id = r['回答ID'];
+                    if (!map[id]) { map[id] = []; groups.push(map[id]); }
+                    map[id].push(r);
+                });
+
+                titleEl.textContent = '年末調整 追加確認 回答内容';
+                subtitleEl.textContent = '回答内容';
+                pdfBox.style.minHeight = '0';
+                pdfBox.style.width = '190mm';
+                pdfBox.style.padding = '6mm 8mm';
+
+                const zip = new JSZip();
+                const usedNames = {};
+                const pdfContent = document.getElementById('pdf-content');
+                const table = document.getElementById('pdf-details-table');
+
+                const addTr = (label, value) => {
+                    const tr = document.createElement('tr');
+                    const th = document.createElement('th');
+                    th.style.cssText = "width: 40%; background-color: #f5f5f5; border: 1px solid #333; padding: 3px 8px; text-align: left; font-weight: normal; word-break: break-all;";
+                    th.textContent = label;
+                    const td = document.createElement('td');
+                    td.style.cssText = "width: 60%; border: 1px solid #333; padding: 3px 8px; word-break: break-all; white-space: pre-wrap;";
+                    td.textContent = isBlankVal(value) ? ' ' : value;
+                    tr.appendChild(th);
+                    tr.appendChild(td);
+                    table.appendChild(tr);
+                };
+                const addHeadTr = (text) => {
+                    const tr = document.createElement('tr');
+                    const th = document.createElement('th');
+                    th.colSpan = 2;
+                    th.style.cssText = "background-color: #ddd; border: 1px solid #333; padding: 3px 8px; text-align: left; font-weight: bold;";
+                    th.textContent = text;
+                    tr.appendChild(th);
+                    table.appendChild(tr);
+                };
+
+                for (let i = 0; i < groups.length; i++) {
+                    const g = groups[i];
+                    const first = g[0];
+                    const percentage = Math.round(((i + 1) / groups.length) * 100);
+                    progressBar.style.width = percentage + '%';
+                    loadingText.textContent = `${i + 1} / ${groups.length} 件のPDFを作成中... (${percentage}%)`;
+
+                    const name = `${first['本人姓'] || ''} ${first['本人名'] || ''}`.trim();
+                    document.getElementById('pdf-header-company').textContent = currentCompanyName;
+                    document.getElementById('pdf-header-name').textContent = name;
+                    document.getElementById('pdf-header-id').textContent = first['回答ID'] || '';
+
+                    table.innerHTML = '';
+                    addTr('回答日時', first['タイムスタンプ']);
+                    addTr('メールアドレス', first['メールアドレス']);
+
+                    const children = g.filter(r => r['確認項目'] === ADDITIONAL_ITEM_CHILD);
+                    const incomes = g.filter(r => r['確認項目'] === ADDITIONAL_ITEM_INCOME);
+
+                    addHeadTr('23歳未満の扶養親族');
+                    if (children.length === 0) addTr('回答', '該当なし');
+                    children.forEach(c => {
+                        addHeadTr(`扶養親族 ${c['No']}`);
+                        addTr('氏名', c['対象者氏名']);
+                        addTr('フリガナ', c['対象者フリガナ']);
+                        addTr('続柄', c['続柄・対象者区分']);
+                        addTr('生年月日', c['生年月日']);
+                        addTr('令和8年中の所得見積金額', yenText(c['令和8年中の所得見積金額']));
+                        addTr('備考', c['備考']);
+                    });
+
+                    addHeadTr('その他収入の所得金額');
+                    if (incomes.length === 0) addTr('回答', '該当なし');
+                    incomes.forEach(r => {
+                        addHeadTr(`対象者 ${r['No']}`);
+                        const type = r['続柄・対象者区分'];
+                        addTr('対象者', type === 'ご本人' ? 'ご本人' : `${type}（${r['対象者氏名'] || ''}）`);
+                        ['退職所得金額', '事業所得金額', 'その他所得金額'].forEach(k => {
+                            if (!isBlankVal(r[k])) addTr(k, yenText(r[k]));
+                        });
+                        addTr('備考', r['備考']);
+                    });
+
+                    const opt = {
+                        margin: 10, filename: 'doc.pdf',
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2, useCORS: true },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                        // 表全体ではなく行単位で改ページを避ける（内容が長い場合は行の切れ目で次ページへ）
+                        pagebreak: { mode: ['css', 'legacy'], avoid: 'tr' }
+                    };
+                    const pdfBlob = await html2pdf().set(opt).from(pdfContent).output('blob');
+
+                    // 同じ方が複数回送信している場合はファイル名に連番を付ける
+                    let base = `${safeFileName(name.replace(' ', '_'))}_追加確認`;
+                    usedNames[base] = (usedNames[base] || 0) + 1;
+                    if (usedNames[base] > 1) base += `_${usedNames[base]}`;
+                    zip.file(`${base}.pdf`, pdfBlob);
+
+                    await new Promise(resolve => setTimeout(resolve, 20));
+                }
+
+                loadingText.textContent = 'ZIPファイルを圧縮中...';
+                const content = await zip.generateAsync({ type: 'blob' });
+                saveAs(content, `${safeFileName(currentCompanyName)}_追加確認PDF一括.zip`);
+                alert('PDFの一括ダウンロードが完了しました。');
+            } catch (e) {
+                console.error(e);
+                alert(`エラー: ${e.message}`);
+            } finally {
+                titleEl.textContent = originalTitle;
+                subtitleEl.textContent = originalSubtitle;
+                pdfBox.style.minHeight = originalBoxStyle.minHeight;
+                pdfBox.style.width = originalBoxStyle.width;
+                pdfBox.style.padding = originalBoxStyle.padding;
+                loading.classList.add('hidden');
+                progressWrapper.classList.add('hidden');
+                defaultLoader.classList.remove('hidden');
+                loadingText.textContent = 'データを読み込んでいます...';
+            }
+        }
+
+        // 追加確認タブの中身（送信1件につき1行、新しい順）
+        function buildAdditionalPanel(list) {
+            let html = `
+                <div class="tab-panel" id="tab-additional">
+                <div class="section">
+                    <div class="section-title">追加確認 回答一覧</div>
+            `;
+            if (list.length === 0) {
+                html += '<p style="text-align:center; padding: 20px 0;">まだ追加確認の回答はありません。</p>';
+                return html + '</div></div>';
+            }
+
+            html += '<p class="tab-note">※同じ方が複数回送信している場合、以前の回答には「以前の回答」と表示しています。最新の回答をご確認ください。</p>';
+            html += `
+                <table id="additional-list-table" class="list-table">
+                    <thead>
+                        <tr>
+                            <th class="name-cell">氏名</th>
+                            <th>23歳未満の扶養親族</th>
+                            <th>その他収入の所得金額</th>
+                            <th class="btn-cell"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            const seen = new Set(); // 新しい順に並んでいるので、2回目以降に出てきた氏名は以前の回答
+            list.forEach(item => {
+                const isOld = seen.has(item.name);
+                seen.add(item.name);
+                const count = (n) => n > 0 ? `${n}名` : '該当なし';
+                html += `
+                    <tr>
+                        <td class="name-cell" data-label="氏名"><span>${escapeHtml(item.name)}${isOld ? '<span class="old-tag">以前の回答</span>' : ''}</span></td>
+                        <td data-label="23歳未満の扶養親族">${count(item.childCount)}</td>
+                        <td data-label="その他収入の所得金額">${count(item.incomeCount)}</td>
+                        <td class="btn-cell">
+                            <a href="${escapeHtml(item.viewUrl)}" target="_blank" rel="noopener noreferrer" class="btn-confirm">回答確認</a>
+                        </td>
+                    </tr>
+                `;
+            });
+            html += '</tbody></table></div></div>';
+            return html;
+        }
+
+        // タブの切り替え（#additional で開くと追加確認タブを表示）
+        function setupTabs() {
+            const buttons = document.querySelectorAll('.tab-btn');
+            const show = (name) => {
+                buttons.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${name}`));
+            };
+            buttons.forEach(b => b.addEventListener('click', () => {
+                show(b.dataset.tab);
+                history.replaceState(null, '', b.dataset.tab === 'additional' ? '#additional' : location.pathname + location.search);
+            }));
+            if (location.hash === '#additional') show('additional');
+        }
+
         function escapeHtml(str) {
             if (typeof str !== 'string') return '';
             return str.replace(/[&<>"']/g, function(match) {
@@ -759,10 +1120,10 @@
     </script>
     
     <div id="pdf-template-container" style="position: fixed; left: -9999px; top: 0;">
-        <div id="pdf-content" style="width: 210mm; min-height: 297mm; padding: 15mm; background: white; box-sizing: border-box; font-family: 'HeiseiMinchoStd-W3', 'Ryumin', serif; color: #333; line-height: 1.5;">
+        <div id="pdf-content" style="width: 190mm; padding: 10mm; background: white; box-sizing: border-box; font-family: 'HeiseiMinchoStd-W3', 'Ryumin', serif; color: #333; line-height: 1.5;">
             
             <div style="text-align: center; border-bottom: 2px solid #333; margin-bottom: 25px; padding-bottom: 10px;">
-                <h1 style="margin: 0; font-size: 22px; font-weight: bold;">年末調整 提出情報</h1>
+                <h1 id="pdf-title" style="margin: 0; font-size: 22px; font-weight: bold;">年末調整 提出情報</h1>
             </div>
 
             <div style="margin-bottom: 20px;">
@@ -781,7 +1142,7 @@
             </div>
 
             <div>
-                <h3 style="font-size: 14px; background-color: #eee; padding: 5px 10px; margin-bottom: 0; border-top: 1px solid #333; border-left: 1px solid #333; border-right: 1px solid #333;">回答内容</h3>
+                <h3 id="pdf-subtitle" style="font-size: 14px; background-color: #eee; padding: 5px 10px; margin-bottom: 0; border-top: 1px solid #333; border-left: 1px solid #333; border-right: 1px solid #333;">回答内容</h3>
                 <table id="pdf-details-table" style="width: 95%; margin: 0 auto; border-collapse: collapse; font-size: 10px;">
                 </table>
             </div>
